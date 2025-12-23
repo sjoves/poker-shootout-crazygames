@@ -110,8 +110,21 @@ export function FallingCards({
     [onSelectCard]
   );
 
+  const containerWidth = containerRef.current?.offsetWidth ?? 0;
+  const containerHeight = containerRef.current?.offsetHeight ?? 0;
+
   return (
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
+      {/* Debug overlay - dev only */}
+      {import.meta.env.DEV && (
+        <div className="absolute top-2 left-2 z-50 bg-black/80 text-white text-xs p-2 rounded font-mono">
+          <div>Deck: {deck.length}</div>
+          <div>Falling: {fallingCards.length}</div>
+          <div>Container: {containerWidth}x{containerHeight}</div>
+          <div>Paused: {isPaused ? "yes" : "no"}</div>
+          <div>Selected: {selectedCardIds.length}</div>
+        </div>
+      )}
       <AnimatePresence>
         {fallingCards.map((card) => (
           <motion.div
