@@ -96,9 +96,9 @@ export function useGameState() {
       const newHandsPlayed = prev.handsPlayed + 1;
       const newScore = prev.score + result.totalPoints;
 
-      // Check if game ends for Classic modes (when deck runs out of cards for another hand)
+      // Check if game ends for Classic modes (after 10 hands = 50 cards used, 2 remaining)
       const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
-      const isGameOver = isClassic && prev.deck.length < 5;
+      const classicGameOver = isClassic && newHandsPlayed >= 10;
 
       // For SSC, check if level is complete
       if (prev.mode === 'ssc') {
@@ -107,13 +107,28 @@ export function useGameState() {
         }
       }
 
+      // If classic game is over, apply leftover card penalty
+      if (classicGameOver) {
+        const leftoverPenalty = calculateLeftoverPenalty(prev.deck);
+        const finalScore = Math.max(0, newScore - leftoverPenalty);
+        
+        return {
+          ...prev,
+          score: finalScore,
+          handsPlayed: newHandsPlayed,
+          selectedCards: [],
+          currentHand: result,
+          isGameOver: true,
+        };
+      }
+
       return {
         ...prev,
         score: newScore,
         handsPlayed: newHandsPlayed,
         selectedCards: [],
         currentHand: result,
-        isGameOver,
+        isGameOver: false,
       };
     });
   }, []);
