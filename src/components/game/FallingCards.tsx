@@ -131,24 +131,8 @@ export function FallingCards({
     [onSelectCard]
   );
 
-  const containerWidth = containerRef.current?.offsetWidth ?? 0;
-  const containerHeight = containerRef.current?.offsetHeight ?? 0;
-  const showDebug =
-    import.meta.env.DEV ||
-    (typeof window !== "undefined" && window.location.hostname.includes("lovableproject.com"));
-
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden">
-      {/* Debug overlay - dev only */}
-      {showDebug && (
-        <div className="absolute top-2 left-2 z-50 rounded-md border border-border bg-card/90 text-card-foreground text-xs p-2 font-mono shadow-sm backdrop-blur">
-          <div>Deck: {deck.length}</div>
-          <div>Falling: {fallingCards.length}</div>
-          <div>Container: {containerWidth}x{containerHeight}</div>
-          <div>Paused: {isPaused ? "yes" : "no"}</div>
-          <div>Selected: {selectedCardIds.length}</div>
-        </div>
-      )}
       <AnimatePresence>
         {fallingCards.map((card) => (
           <motion.div
