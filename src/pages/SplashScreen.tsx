@@ -54,7 +54,7 @@ export default function SplashScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <h1 className="text-5xl md:text-7xl font-display text-title-gold text-glow mb-4">
+        <h1 className="text-5xl md:text-7xl font-display text-title-gold mb-4">
           POKER RUSH
         </h1>
         <p className="text-lg text-muted-foreground">
