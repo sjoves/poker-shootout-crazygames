@@ -55,6 +55,7 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Check for active subscriptions
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
@@ -72,9 +73,34 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
+    // Check for one-time purchases (successful payments for the full game)
+    const payments = await stripe.paymentIntents.list({
+      customer: customerId,
+      limit: 100,
+    });
+
+    const hasPurchasedGame = payments.data.some((payment: any) => 
+      payment.status === "succeeded" && 
+      payment.metadata?.product === "poker_rush_full_game"
+    );
+
+    // Also check checkout sessions for completed purchases
+    const checkoutSessions = await stripe.checkout.sessions.list({
+      customer: customerId,
+      limit: 100,
+    });
+
+    const hasCompletedPurchase = checkoutSessions.data.some((session: any) =>
+      session.mode === "payment" && 
+      session.payment_status === "paid"
+    );
+
+    const isPremium = hasActiveSub || hasPurchasedGame || hasCompletedPurchase;
+    logStep("Premium status determined", { hasActiveSub, hasPurchasedGame, hasCompletedPurchase, isPremium });
+
     return new Response(JSON.stringify({
       subscribed: hasActiveSub,
-      isPremium: hasActiveSub,
+      isPremium,
       subscription_end: subscriptionEnd,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
