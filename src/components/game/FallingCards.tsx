@@ -49,14 +49,18 @@ export function FallingCards({
       ...card,
       x: Math.random() * (containerWidth - cardWidth),
       y: -100,
-      speed: (0.5 + Math.random() * 0.5) * speed * 2,
+      speed: (1.5 + Math.random() * 1.5) * speed,
       rotation: (Math.random() - 0.5) * 30,
-      rotationSpeed: (Math.random() - 0.5) * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.5,
       sway: Math.random() * 20,
       swaySpeed: 2 + Math.random() * 2,
     };
     
-    setFallingCards(prev => [...prev, fallingCard]);
+    setFallingCards(prev => {
+      // Limit max cards on screen
+      if (prev.length >= 15) return prev;
+      return [...prev, fallingCard];
+    });
   }, [deck, selectedCardIds, speed, isRecycling]);
 
   // Animation loop
@@ -67,7 +71,7 @@ export function FallingCards({
     
     const animate = (timestamp: number) => {
       // Spawn new cards periodically
-      if (timestamp - lastSpawnRef.current > 800 / speed) {
+      if (timestamp - lastSpawnRef.current > 600 / speed) {
         spawnCard();
         lastSpawnRef.current = timestamp;
       }
