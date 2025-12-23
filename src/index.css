@@ -62,6 +62,13 @@
     --shadow-glow: 0 0 30px hsl(220 90% 56% / 0.4);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
 
+    /* Game specific gradients */
+    --game-field-start: 0 70% 25%;
+    --game-field-end: 0 60% 15%;
+
+    /* Title color */
+    --title-gold: 48 100% 50%;
+
     /* Sidebar */
     --sidebar-background: 230 25% 12%;
     --sidebar-foreground: 220 15% 95%;
@@ -157,5 +164,13 @@
 
   .primary-gradient {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+  }
+
+  .game-field-bg {
+    background: linear-gradient(180deg, hsl(var(--game-field-start)) 0%, hsl(var(--game-field-end)) 100%);
+  }
+
+  .text-title-gold {
+    color: hsl(var(--title-gold));
   }
 }

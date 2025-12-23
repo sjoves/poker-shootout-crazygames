@@ -58,7 +58,7 @@ export default function GameScreen() {
   const selectedIds = state.selectedCards.map(c => c.id);
 
   return (
-    <div className="min-h-screen modern-bg flex flex-col">
+    <div className="min-h-screen game-field-bg flex flex-col">
       <GameHeader
         isPaused={state.isPaused}
         onHome={() => { resetGame(); navigate('/'); }}
