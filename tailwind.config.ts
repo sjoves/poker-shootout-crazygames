@@ -19,8 +19,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        western: ['Rye', 'cursive'],
-        sans: ['Roboto', 'sans-serif'],
+        display: ['Space Grotesk', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

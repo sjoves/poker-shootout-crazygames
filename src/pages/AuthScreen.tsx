@@ -41,14 +41,14 @@ export default function AuthScreen() {
   };
 
   return (
-    <div className="min-h-screen canyon-bg flex items-center justify-center p-6">
+    <div className="min-h-screen modern-bg flex items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-card/90 backdrop-blur-sm rounded-2xl p-8 border border-border"
       >
-        <h1 className="text-3xl font-western text-primary text-center mb-6">
-          {isSignUp ? 'Join the Shootout' : 'Welcome Back'}
+        <h1 className="text-3xl font-display text-primary text-center mb-6">
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">

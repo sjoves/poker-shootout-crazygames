@@ -13,17 +13,17 @@ export default function SplashScreen() {
   };
 
   return (
-    <div className="min-h-screen canyon-bg flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6">
       <motion.div
         initial={{ opacity: 0, y: -30 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <h1 className="text-5xl md:text-7xl font-western text-primary text-glow mb-4">
-          POKER SHOOTOUT
+        <h1 className="text-5xl md:text-7xl font-display text-primary text-glow mb-4">
+          POKER RUSH
         </h1>
         <p className="text-lg text-muted-foreground">
-          Shoot cards. Build hands. Beat the odds.
+          Collect cards. Build hands. Beat the clock.
         </p>
       </motion.div>
 
@@ -38,7 +38,7 @@ export default function SplashScreen() {
           <Button
             variant={selectedMode === 'classic' ? 'default' : 'outline'}
             size="lg"
-            className="w-full h-16 text-lg font-western"
+            className="w-full h-16 text-lg font-display"
             onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
           >
             🎯 Classic Mode
@@ -60,7 +60,7 @@ export default function SplashScreen() {
           <Button
             variant={selectedMode === 'blitz' ? 'default' : 'outline'}
             size="lg"
-            className="w-full h-16 text-lg font-western"
+            className="w-full h-16 text-lg font-display"
             onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
           >
             ⚡ 52-Card Blitz
@@ -81,7 +81,7 @@ export default function SplashScreen() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-16 text-lg font-western sunset-gradient text-primary-foreground border-0"
+          className="w-full h-16 text-lg font-display primary-gradient text-primary-foreground border-0"
           onClick={() => handleModeSelect('ssc')}
         >
           🏆 Sharp Shooter Challenge

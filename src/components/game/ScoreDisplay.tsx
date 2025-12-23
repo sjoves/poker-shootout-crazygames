@@ -15,7 +15,7 @@ export function ScoreDisplay({ score, currentHand, className }: ScoreDisplayProp
         key={score}
         initial={{ scale: 1.2 }}
         animate={{ scale: 1 }}
-        className="text-4xl font-western text-gold text-glow"
+        className="text-4xl font-display text-gold text-glow"
       >
         {score.toLocaleString()}
       </motion.div>
@@ -59,7 +59,7 @@ export function ScorePanel({ score, timeDisplay, progressLabel, progressValue }:
           key={score}
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
-          className="text-2xl font-western text-gold"
+          className="text-2xl font-display text-gold"
         >
           {score.toLocaleString()}
         </motion.div>

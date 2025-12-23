@@ -32,14 +32,14 @@ export default function GameOverScreen() {
   ];
 
   return (
-    <div className="min-h-screen canyon-bg flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen modern-bg flex flex-col items-center justify-center p-6">
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         className="text-center"
       >
         <Trophy className="w-20 h-20 text-gold mx-auto mb-4" />
-        <h1 className="text-4xl font-western text-primary mb-2">Game Over</h1>
+        <h1 className="text-4xl font-display text-primary mb-2">Game Over</h1>
         
         <div className="flex justify-center gap-1 my-4">
           {[1, 2, 3, 4, 5].map(i => (
@@ -52,7 +52,7 @@ export default function GameOverScreen() {
         
         <p className="text-lg text-muted-foreground mb-6">{messages[stars - 1]}</p>
         
-        <div className="text-5xl font-western text-gold text-glow mb-8">
+        <div className="text-5xl font-display text-gold text-glow mb-8">
           {gameState.score.toLocaleString()}
         </div>
 
