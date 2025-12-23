@@ -153,25 +153,37 @@ export function FallingCards({
         {fallingCards.map((card) => (
           <motion.div
             key={card.instanceKey}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.9, rotate: card.rotation }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              rotate: card.rotation,
+            }}
             exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.12 }}
+            transition={{ 
+              duration: 0.12,
+              rotate: { duration: 0.1, ease: "linear" }
+            }}
             style={{
               position: "absolute",
               left: card.x,
               top: card.y,
-              transform: `rotate(${card.rotation}deg)`,
               willChange: "transform, top, left",
             }}
-            className="cursor-pointer z-10"
+            className="z-10"
           >
-            <PlayingCard
-              card={card}
+            {/* Larger invisible hit zone for easier clicking */}
+            <button
               onClick={() => handleCardClick(card)}
-              size="md"
-              animate={false}
-            />
+              className="relative cursor-pointer p-4 -m-4 focus:outline-none"
+              aria-label={`Select ${card.rank} of ${card.suit}`}
+            >
+              <PlayingCard
+                card={card}
+                size="md"
+                animate={false}
+              />
+            </button>
           </motion.div>
         ))}
       </AnimatePresence>
