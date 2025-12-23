@@ -54,13 +54,13 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [
         {
-          price: "price_1ShZHOKVaQZQDtr603b66itY", // Poker Rush Premium $4.99/month
+          price: "price_1ShaWwKVaQZQDtr6A9cAH7GS", // Poker Rush Full Game $4.99 one-time
           quantity: 1,
         },
       ],
-      mode: "subscription",
-      success_url: `${origin}/?subscription=success`,
-      cancel_url: `${origin}/?subscription=cancelled`,
+      mode: "payment",
+      success_url: `${origin}/?purchase=success`,
+      cancel_url: `${origin}/?purchase=cancelled`,
     });
 
     logStep("Checkout session created", { sessionId: session.id });

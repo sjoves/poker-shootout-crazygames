@@ -140,7 +140,7 @@ export default function SplashScreen() {
           {getModeLabel('ssc')}
         </Button>
 
-        {/* Premium Upsell */}
+        {/* Buy Game Upsell */}
         {!isPremium && !loading && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -151,7 +151,7 @@ export default function SplashScreen() {
             <div className="flex items-center gap-3 mb-3">
               <Crown className="w-6 h-6 text-primary" />
               <div>
-                <h3 className="font-semibold text-foreground">Go Premium</h3>
+                <h3 className="font-semibold text-foreground">Buy Full Game</h3>
                 <p className="text-sm text-muted-foreground">Unlock all modes, ad-free forever</p>
               </div>
             </div>
@@ -167,7 +167,7 @@ export default function SplashScreen() {
               size="lg"
             >
               <Crown className="w-4 h-4 mr-2" />
-              {user ? 'Subscribe for $4.99/month' : 'Sign in to Subscribe'}
+              {user ? 'Buy for $4.99' : 'Sign in to Purchase'}
             </Button>
           </motion.div>
         )}
