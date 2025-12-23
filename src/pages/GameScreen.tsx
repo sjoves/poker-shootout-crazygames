@@ -39,8 +39,8 @@ export default function GameScreen() {
     if (state.mode === 'blitz_fc' || state.mode === 'blitz_cb') {
       return { label: 'Hands', value: `${state.handsPlayed}` };
     }
-    // Classic modes: show remaining cards in deck
-    const remainingCards = state.deck.length;
+    // Classic modes: show remaining cards in deck (52 total, using all for 10 hands + 2 leftover)
+    const remainingCards = state.deck.length + (5 - state.selectedCards.length);
     return { label: 'Cards', value: `${remainingCards}` };
   };
 
