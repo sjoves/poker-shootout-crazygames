@@ -109,14 +109,18 @@ export function ConveyorBelt({
     onSelectCard(originalCard);
   }, [onSelectCard]);
 
-  const rowHeight = 90;
+  const rowHeight = 120;
+  const totalHeight = rows * rowHeight;
 
   return (
     <div 
       ref={containerRef}
-      className="relative w-full overflow-hidden"
-      style={{ height: rows * rowHeight }}
+      className="absolute inset-0 flex items-center justify-center overflow-hidden"
     >
+      <div 
+        className="relative w-full"
+        style={{ height: totalHeight }}
+      >
       {/* Track backgrounds */}
       {Array(rows).fill(null).map((_, index) => (
         <div
@@ -156,6 +160,7 @@ export function ConveyorBelt({
           </motion.div>
         ))}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
