@@ -109,6 +109,8 @@ const DEMO_AVAILABLE_CARDS: CardType[] = [
   { id: 'A-hearts', suit: 'hearts', rank: 'A', value: 14 },
   { id: '9-spades', suit: 'spades', rank: '9', value: 9 },
   { id: '2-hearts', suit: 'hearts', rank: '2', value: 2 },
+  { id: '10-hearts', suit: 'hearts', rank: '10', value: 10 },
+  { id: 'Q-diamonds', suit: 'diamonds', rank: 'Q', value: 12 },
 ];
 
 interface TutorialStep {
