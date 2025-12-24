@@ -7,7 +7,9 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
-import { Crown, Play, Lock, HelpCircle } from 'lucide-react';
+import { PlayIcon, LockClosedIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
+import logo from '@/assets/logo.png';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
@@ -32,9 +34,9 @@ export default function SplashScreen() {
 
   const getModeIcon = (mode: string) => {
     if (isPremium || mode.startsWith('classic')) {
-      return <Play className="w-5 h-5" />;
+      return <PlayIcon className="w-5 h-5" />;
     }
-    return <Lock className="w-5 h-5" />;
+    return <LockClosedIcon className="w-5 h-5" />;
   };
 
   const getModeLabel = (mode: string) => {
@@ -54,9 +56,7 @@ export default function SplashScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <h1 className="text-5xl md:text-7xl font-display text-title-gold mb-4">
-          POKER RUSH
-        </h1>
+        <img src={logo} alt="Poker Shootout" className="w-48 md:w-64 mx-auto mb-4" />
         <p className="text-lg text-muted-foreground">
           Collect cards. Build hands. Beat the clock.
         </p>
@@ -66,7 +66,7 @@ export default function SplashScreen() {
             animate={{ opacity: 1, scale: 1 }}
             className="mt-3 inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-1.5 rounded-full text-sm font-medium"
           >
-            <Crown className="w-4 h-4" />
+            <StarIcon className="w-4 h-4" />
             Premium Member
           </motion.div>
         )}
@@ -149,7 +149,7 @@ export default function SplashScreen() {
             className="mt-4 p-4 bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 rounded-xl"
           >
             <div className="flex items-center gap-3 mb-3">
-              <Crown className="w-6 h-6 text-primary" />
+              <StarIcon className="w-6 h-6 text-primary" />
               <div>
                 <h3 className="font-semibold text-foreground">Buy Full Game</h3>
                 <p className="text-sm text-muted-foreground">Unlock all modes, ad-free forever</p>
@@ -166,7 +166,7 @@ export default function SplashScreen() {
               className="w-full"
               size="lg"
             >
-              <Crown className="w-4 h-4 mr-2" />
+              <StarIcon className="w-4 h-4 mr-2" />
               {user ? 'Buy for $4.99' : 'Sign in to Purchase'}
             </Button>
           </motion.div>
@@ -180,7 +180,7 @@ export default function SplashScreen() {
         className="mt-8 flex flex-wrap justify-center gap-3"
       >
         <Button variant="ghost" onClick={() => setShowTutorial(true)} className="gap-2">
-          <HelpCircle className="w-4 h-4" />
+          <QuestionMarkCircleIcon className="w-4 h-4" />
           How to Play
         </Button>
         <Button variant="ghost" onClick={() => navigate('/leaderboard')}>
