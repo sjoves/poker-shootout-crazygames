@@ -7,7 +7,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
-import { PlayIcon, LockClosedIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { SettingsModal } from '@/components/settings/SettingsModal';
+import { PlayIcon, LockClosedIcon, QuestionMarkCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import logo from '@/assets/logo.png';
 
@@ -17,6 +18,7 @@ export default function SplashScreen() {
   const { isPremium, requiresAdForMode, markAdWatchedForMode, openCheckout, loading } = useSubscription();
   const [selectedMode, setSelectedMode] = useState<'classic' | 'blitz' | 'ssc' | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const rewardedAd = useRewardedAd();
 
   const handleModeSelect = (mode: GameMode) => {
@@ -192,10 +194,17 @@ export default function SplashScreen() {
         <Button variant="ghost" onClick={() => navigate('/play/ssc?testBonus=true')}>
           🧪 Test Bonus
         </Button>
+        <Button variant="ghost" onClick={() => setShowSettings(true)} className="gap-2">
+          <Cog6ToothIcon className="w-4 h-4" />
+          Settings
+        </Button>
       </motion.div>
 
       {/* Tutorial Modal */}
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+
+      {/* Settings Modal */}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
       {/* Rewarded Ad Modal */}
       <RewardedAd
