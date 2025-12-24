@@ -189,7 +189,7 @@ export default function SplashScreen() {
         <Button variant="ghost" onClick={() => navigate('/auth')}>
           {user ? '👤 Account' : '👤 Sign In'}
         </Button>
-        <Button variant="ghost" onClick={() => navigate('/game?testBonus=true')}>
+        <Button variant="ghost" onClick={() => navigate('/play/ssc?testBonus=true')}>
           🧪 Test Bonus
         </Button>
       </motion.div>
