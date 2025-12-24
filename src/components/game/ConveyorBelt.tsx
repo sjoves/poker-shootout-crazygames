@@ -3,6 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, ConveyorCard } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 
+interface PendingReturn {
+  card: Card;
+  returnTime: number;
+}
+
 interface ConveyorBeltProps {
   deck: Card[];
   selectedCardIds: string[];
@@ -21,9 +26,11 @@ export function ConveyorBelt({
   rows = 4,
 }: ConveyorBeltProps) {
   const [conveyorCards, setConveyorCards] = useState<ConveyorCard[]>([]);
+  const [pendingReturns, setPendingReturns] = useState<PendingReturn[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>();
   const initializedRef = useRef(false);
+  const returnDelayMs = 3000; // Cards return after 3 seconds
 
   // Initialize cards on tracks
   useEffect(() => {
@@ -64,6 +71,22 @@ export function ConveyorBelt({
     setConveyorCards(cards);
   }, [deck, rows, speed]);
 
+  // Track when cards are selected and schedule their return
+  const prevSelectedRef = useRef<string[]>([]);
+  useEffect(() => {
+    const newlySelected = selectedCardIds.filter(id => !prevSelectedRef.current.includes(id));
+    if (newlySelected.length > 0) {
+      const now = Date.now();
+      const newPending = newlySelected.map(id => {
+        const card = deck.find(c => c.id === id);
+        return card ? { card, returnTime: now + returnDelayMs } : null;
+      }).filter(Boolean) as PendingReturn[];
+      
+      setPendingReturns(prev => [...prev, ...newPending]);
+    }
+    prevSelectedRef.current = selectedCardIds;
+  }, [selectedCardIds, deck, returnDelayMs]);
+
   // Animation loop
   useEffect(() => {
     if (isPaused || !containerRef.current) return;
@@ -72,6 +95,38 @@ export function ConveyorBelt({
     const cardWidth = 64;
     
     const animate = () => {
+      const now = Date.now();
+      
+      // Check for cards ready to return
+      setPendingReturns(prev => {
+        const readyToReturn = prev.filter(p => now >= p.returnTime);
+        const stillPending = prev.filter(p => now < p.returnTime);
+        
+        if (readyToReturn.length > 0) {
+          setConveyorCards(cards => {
+            const newCards = [...cards];
+            readyToReturn.forEach(({ card }) => {
+              // Find a random row and position to insert the card
+              const row = Math.floor(Math.random() * rows);
+              const isLeftToRight = row % 2 === 0;
+              const x = isLeftToRight ? -cardWidth : containerWidth;
+              
+              newCards.push({
+                ...card,
+                id: `${card.id}-row${row}-ret${now}`,
+                x,
+                y: 0,
+                row,
+                speed: speed * (isLeftToRight ? 1 : -1) * 0.5,
+              });
+            });
+            return newCards;
+          });
+        }
+        
+        return stillPending;
+      });
+      
       setConveyorCards(prev => {
         return prev.map(card => {
           let newX = card.x + card.speed;
@@ -97,7 +152,7 @@ export function ConveyorBelt({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPaused, selectedCardIds, speed]);
+  }, [isPaused, selectedCardIds, speed, rows]);
 
   const handleCardClick = useCallback((card: ConveyorCard) => {
     const originalCard: Card = {
