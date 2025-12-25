@@ -85,7 +85,7 @@ export default function SplashScreen() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10"
+            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
             onClick={() => setSelectedMode(selectedMode === 'classic' ? null : 'classic')}
           >
             🎯 Classic Mode
@@ -110,7 +110,7 @@ export default function SplashScreen() {
           <Button
             variant="outline"
             size="lg"
-            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10"
+            className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
             onClick={() => setSelectedMode(selectedMode === 'blitz' ? null : 'blitz')}
           >
             ⚡ 52-Card Blitz
@@ -134,7 +134,7 @@ export default function SplashScreen() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-16 text-lg font-display gap-2 border-primary bg-transparent hover:bg-primary/10"
+          className="w-full h-16 text-lg font-display gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
           onClick={() => handleModeSelect('ssc')}
         >
           {getModeIcon('ssc')}
