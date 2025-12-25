@@ -10,7 +10,7 @@ import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { PlayIcon, LockClosedIcon, QuestionMarkCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/raiders-logo.svg';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
