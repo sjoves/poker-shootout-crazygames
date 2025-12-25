@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAudio } from '@/contexts/AudioContext';
 import { Button } from '@/components/ui/button';
 import { Shuffle } from 'lucide-react';
 
@@ -20,6 +21,8 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }:
   // Only show up to MAX_VISIBLE_CARDS
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
+  const { playSound } = useAudio();
+
   // Use 'ssc' size (20% larger than sm) for SSC Static mode
   const cardSize = isMobile ? 'sm' : 'ssc';
   
@@ -42,7 +45,10 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }:
           >
             <PlayingCard
               card={card}
-              onClick={() => onSelectCard(card)}
+              onClick={() => {
+                playSound('cardSelect');
+                onSelectCard(card);
+              }}
               isSelected={selectedCardIds.includes(card.id)}
               size={cardSize}
               animate={false}
