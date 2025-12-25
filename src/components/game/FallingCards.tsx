@@ -31,17 +31,42 @@ export function FallingCards({
   const spawnCountRef = useRef<number>(0);
   const { playSound } = useAudio();
 
+  // Track which cards have already been spawned (by card id) so we don't re-spawn them
+  const spawnedCardIdsRef = useRef<Set<string>>(new Set());
+
+  // Reset spawned tracking when deck changes significantly (new game)
+  useEffect(() => {
+    if (deck.length === 52) {
+      spawnedCardIdsRef.current.clear();
+      deckIndexRef.current = 0;
+    }
+  }, [deck.length]);
+
   const createSpawn = useCallback(
     (containerWidth: number): LocalFallingCard | null => {
-      const availableCards = deck.filter((c) => !selectedCardIds.includes(c.id));
+      // For non-recycling modes, we need cards that:
+      // 1. Are still in the deck
+      // 2. Haven't been selected
+      // 3. Haven't already been spawned (for non-recycling mode)
+      const availableCards = deck.filter((c) => {
+        if (selectedCardIds.includes(c.id)) return false;
+        if (!isRecycling && spawnedCardIdsRef.current.has(c.id)) return false;
+        return true;
+      });
+      
       if (availableCards.length === 0) return null;
 
       const pickIndex = isRecycling
         ? Math.floor(Math.random() * availableCards.length)
-        : deckIndexRef.current % availableCards.length;
+        : 0; // For non-recycling, always pick the first available (sequential from deck)
 
       const picked = availableCards[pickIndex];
       if (!picked) return null;
+
+      // Mark this card as spawned for non-recycling mode
+      if (!isRecycling) {
+        spawnedCardIdsRef.current.add(picked.id);
+      }
 
       deckIndexRef.current += 1;
       spawnCountRef.current += 1;
