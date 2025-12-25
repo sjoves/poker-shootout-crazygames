@@ -116,17 +116,32 @@ export function FallingCards({
       const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
 
       setFallingCards((prev) => {
-        const moved = prev
-          .map((card) => ({
+        const moved: LocalFallingCard[] = [];
+        
+        prev.forEach((card) => {
+          const updatedCard = {
             ...card,
             y: card.y + card.speed,
             rotation: card.rotation + card.rotationSpeed,
             x: card.x + Math.sin((t / 1000) * card.swaySpeed) * 0.35,
-          }))
-          .filter((card) => {
-            if (card.y > containerHeight + 60) return false;
-            return !selectedCardIds.includes(card.id);
-          });
+          };
+          
+          // Check if card fell off screen
+          if (updatedCard.y > containerHeight + 60) {
+            // Card fell off - remove from spawned set so it can respawn
+            if (!isRecycling) {
+              spawnedCardIdsRef.current.delete(card.id);
+            }
+            return; // Don't add to moved array
+          }
+          
+          // Check if card was selected
+          if (selectedCardIds.includes(card.id)) {
+            return; // Don't add to moved array
+          }
+          
+          moved.push(updatedCard);
+        });
 
         const shouldSpawn = t - lastSpawnRef.current > 600 / speed;
         if (!shouldSpawn) return moved;
@@ -148,7 +163,7 @@ export function FallingCards({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPaused, speed, selectedCardIds, createSpawn]);
+  }, [isPaused, speed, selectedCardIds, createSpawn, isRecycling, deck.length]);
 
   const handleCardClick = useCallback(
     (card: LocalFallingCard) => {
