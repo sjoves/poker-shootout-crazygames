@@ -4,7 +4,6 @@ import { Card, Suit } from '@/types/game';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { useAudio } from '@/contexts/AudioContext';
-import cardBack from '@/assets/card-back.png';
 
 interface FlippableCardProps {
   card: Card;
@@ -90,20 +89,39 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
         animate={{ rotateY: isFlipped || isKept ? 180 : 0 }}
         transition={{ duration: 0.2 }}
       >
-        {/* Card Back */}
+        {/* Card Back - Black and white diamond pattern */}
         <div
           className={cn(
             'absolute inset-0 rounded-lg backface-hidden overflow-hidden',
-            'border-2 border-gray-600',
-            'shadow-lg'
+            'border-2 border-gray-300',
+            'shadow-lg bg-white'
           )}
           onClick={handleCardClick}
         >
-          <img 
-            src={cardBack} 
-            alt="Card back" 
-            className="w-full h-full object-cover"
-          />
+          {/* Outer border */}
+          <div className="absolute inset-1 border border-gray-800 rounded">
+            {/* Inner pattern container */}
+            <div className="absolute inset-1 bg-gray-900 rounded-sm overflow-hidden">
+              {/* Diamond pattern using CSS */}
+              <div 
+                className="w-full h-full"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(45deg, white 25%, transparent 25%),
+                    linear-gradient(-45deg, white 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, white 75%),
+                    linear-gradient(-45deg, transparent 75%, white 75%)
+                  `,
+                  backgroundSize: '8px 8px',
+                  backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
+                }}
+              />
+            </div>
+          </div>
+          {/* Center diamond accent */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="w-6 h-6 bg-white border-2 border-gray-800 rotate-45" />
+          </div>
         </div>
 
         {/* Card Front */}
