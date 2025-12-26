@@ -293,12 +293,12 @@ export default function GameScreen() {
                     <p>Hand Score: {(state.score - state.bonusTimePoints).toLocaleString()}</p>
                     <p className="text-accent">+ Time Bonus: {state.bonusTimePoints.toLocaleString()}</p>
                     <p className="text-lg text-foreground font-bold border-t border-border pt-1 mt-1">
-                      Total: {state.score.toLocaleString()}
+                      Total Score: {state.score.toLocaleString()}
                     </p>
                   </div>
                 ) : (
                   <p className="text-lg text-muted-foreground mb-2">
-                    Score: {state.score.toLocaleString()}
+                    Total Score: {state.score.toLocaleString()}
                   </p>
                 )}
                 {state.pointMultiplier > 1 && (
