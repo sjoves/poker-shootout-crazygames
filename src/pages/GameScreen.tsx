@@ -105,7 +105,7 @@ export default function GameScreen() {
     prevHandsPlayed.current = state.handsPlayed;
   }, [state.handsPlayed, state.currentHand, playSound]);
 
-  // Play countdown sounds during final 10 seconds
+  // Play countdown sounds during final 10 seconds and game over sound when time hits 0
   const prevTimeRef = useRef(state.timeRemaining);
   useEffect(() => {
     const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
@@ -116,6 +116,10 @@ export default function GameScreen() {
       if (state.timeRemaining <= 10 && state.timeRemaining > 0 && !state.isGameOver && !state.isLevelComplete) {
         // Play the pulsed 808 countdown sound each second
         playSound('bonusCountdown');
+      }
+      // Play game over sound immediately when time hits 0
+      if (state.timeRemaining === 0 && prevTimeRef.current > 0) {
+        playSound('gameOver');
       }
     }
     prevTimeRef.current = state.timeRemaining;
@@ -128,12 +132,15 @@ export default function GameScreen() {
     }
   }, [state.isLevelComplete, playSound]);
 
-  // Play sound on game over
+  // Play sound on game over (only for non-timed modes - timed modes play sound when time hits 0)
   useEffect(() => {
-    if (state.isGameOver) {
+    const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
+    const isSSC = state.mode === 'ssc';
+    // Only play here for Classic modes - Blitz/SSC play sound when time hits 0
+    if (state.isGameOver && !isBlitz && !isSSC) {
       playSound('gameOver');
     }
-  }, [state.isGameOver, playSound]);
+  }, [state.isGameOver, state.mode, playSound]);
 
   // Auto-advance to next level after showing congratulations
   useEffect(() => {
