@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,8 @@ import { Star, Shuffle, Crown, Play, Award, Clapperboard, Home } from 'lucide-re
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function GameOverScreen() {
   const location = useLocation();
@@ -15,6 +17,59 @@ export default function GameOverScreen() {
   const { user } = useAuth();
   const { isPremium, openCheckout } = useSubscription();
   const rewardedAd = useRewardedAd();
+  const scoreSavedRef = useRef(false);
+
+  // Save score to leaderboard when component mounts
+  useEffect(() => {
+    const saveScore = async () => {
+      if (!user || !gameState || scoreSavedRef.current) return;
+      
+      scoreSavedRef.current = true;
+      
+      try {
+        // Get user's profile id
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          return;
+        }
+        
+        if (!profile) {
+          console.error('No profile found for user');
+          return;
+        }
+        
+        // Save score to leaderboard
+        const { error: insertError } = await supabase
+          .from('leaderboard_entries')
+          .insert({
+            user_id: user.id,
+            profile_id: profile.id,
+            game_mode: gameState.mode,
+            score: gameState.score,
+            hands_played: gameState.handsPlayed,
+            ssc_level: gameState.mode === 'ssc' ? gameState.sscLevel : null,
+            time_seconds: gameState.timeElapsed,
+            best_hand: gameState.currentHand?.hand.name || null,
+          });
+        
+        if (insertError) {
+          console.error('Error saving score:', insertError);
+        } else {
+          console.log('Score saved to leaderboard');
+        }
+      } catch (error) {
+        console.error('Error saving score:', error);
+      }
+    };
+    
+    saveScore();
+  }, [user, gameState]);
 
   if (!gameState) {
     navigate('/');
