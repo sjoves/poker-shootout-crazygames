@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
-import { PlayIcon, LockClosedIcon, QuestionMarkCircleIcon, Cog6ToothIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 import logo from '@/assets/raiders-logo.svg';
 
@@ -36,9 +35,9 @@ export default function SplashScreen() {
 
   const getModeIcon = (mode: string) => {
     if (isPremium || mode.startsWith('classic')) {
-      return <PlayIcon className="w-5 h-5" />;
+      return null;
     }
-    return <LockClosedIcon className="w-5 h-5" />;
+    return <span>🔒</span>;
   };
 
   const getModeLabel = (mode: string) => {
@@ -118,12 +117,10 @@ export default function SplashScreen() {
           </Button>
           {selectedMode === 'blitz' && (
             <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
-              <Button variant="secondary" className="flex-1 gap-1" onClick={() => handleModeSelect('blitz_fc')}>
-                {getModeIcon('blitz_fc')}
+              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_fc')}>
                 Falling Cards
               </Button>
-              <Button variant="secondary" className="flex-1 gap-1" onClick={() => handleModeSelect('blitz_cb')}>
-                {getModeIcon('blitz_cb')}
+              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_cb')}>
                 Conveyor Belt
               </Button>
             </motion.div>
@@ -134,10 +131,9 @@ export default function SplashScreen() {
         <Button
           variant="outline"
           size="lg"
-          className="w-full h-16 text-lg font-display gap-2 border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
+          className="w-full h-16 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground"
           onClick={() => handleModeSelect('ssc')}
         >
-          {getModeIcon('ssc')}
           🏆 Sharp Shooter Challenge
           {getModeLabel('ssc')}
         </Button>
@@ -182,9 +178,8 @@ export default function SplashScreen() {
         transition={{ delay: 0.4 }}
         className="mt-8 flex flex-wrap justify-center gap-3"
       >
-        <Button variant="ghost" onClick={() => setShowTutorial(true)} className="gap-2">
-          <QuestionMarkCircleIcon className="w-4 h-4" />
-          How to Play
+        <Button variant="ghost" onClick={() => setShowTutorial(true)}>
+          ❓ How to Play
         </Button>
         <Button variant="ghost" onClick={() => navigate('/leaderboard')}>
           🏅 Leaderboard
@@ -195,9 +190,8 @@ export default function SplashScreen() {
         <Button variant="ghost" onClick={() => navigate('/play/ssc?testBonus=true')}>
           🧪 Test Bonus
         </Button>
-        <Button variant="ghost" onClick={() => setShowSettings(true)} className="gap-2">
-          <Cog6ToothIcon className="w-4 h-4" />
-          Settings
+        <Button variant="ghost" onClick={() => setShowSettings(true)}>
+          ⚙️ Settings
         </Button>
       </motion.div>
 
