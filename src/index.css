@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    /* Emerald & Mint Casino Theme */
+    /* Emerald Theme (Default) */
     --background: 150 20% 6%;
     --background-gradient-start: 150 25% 4%;
     --background-gradient-end: 150 15% 10%;
@@ -122,77 +122,223 @@
     --sidebar-ring: 160 70% 40%;
   }
 
-  /* Acid Green Theme */
-  html.theme-acid-green, html.theme-acid-green:root {
-    --background: 140 25% 8%;
-    --background-gradient-start: 0 0% 4%;
-    --background-gradient-end: 140 40% 14%;
-    --foreground: 0 0% 95%;
+  /* Pink Theme */
+  html.theme-pink, html.theme-pink:root {
+    --background: 330 20% 6%;
+    --background-gradient-start: 330 25% 4%;
+    --background-gradient-end: 330 15% 10%;
+    --foreground: 330 10% 95%;
 
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
+    --card: 330 20% 10%;
+    --card-foreground: 330 10% 95%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 330 20% 8%;
+    --popover-foreground: 330 10% 95%;
 
-    /* Raiders Green - Primary */
-    --primary: 140 66% 51%;
-    --primary-foreground: 0 0% 5%;
-    --primary-glow: 140 70% 61%;
+    /* Pink - Primary */
+    --primary: 330 70% 55%;
+    --primary-foreground: 330 10% 98%;
+    --primary-glow: 330 75% 65%;
 
-    /* Dark gray accent */
-    --secondary: 0 0% 18%;
-    --secondary-foreground: 0 0% 95%;
+    /* Dark pink accent */
+    --secondary: 330 25% 12%;
+    --secondary-foreground: 330 10% 95%;
 
     /* Muted tones */
-    --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 330 15% 15%;
+    --muted-foreground: 330 10% 55%;
 
-    /* Raiders Green - Accent */
-    --accent: 140 66% 51%;
-    --accent-foreground: 0 0% 8%;
+    /* Light pink - Accent */
+    --accent: 330 60% 70%;
+    --accent-foreground: 330 30% 8%;
 
     /* Destructive */
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 0% 98%;
 
     /* Borders and inputs */
-    --border: 140 40% 30%;
-    --input: 0 0% 15%;
-    --ring: 140 66% 51%;
+    --border: 330 15% 20%;
+    --input: 330 20% 12%;
+    --ring: 330 70% 55%;
 
-    /* Card suit colors - silver theme */
+    /* Card suit colors */
     --suit-hearts: 0 75% 50%;
     --suit-diamonds: 0 75% 50%;
-    --suit-clubs: 0 0% 20%;
-    --suit-spades: 0 0% 20%;
+    --suit-clubs: 330 15% 15%;
+    --suit-spades: 330 15% 15%;
 
-    /* Game specific - Green accents */
-    --gold: 140 66% 51%;
-    --gold-glow: 140 70% 61%;
-    --bronze: 140 50% 40%;
-    --silver: 0 0% 70%;
+    /* Game specific - Pink accents */
+    --gold: 330 60% 70%;
+    --gold-glow: 330 70% 80%;
+    --bronze: 330 50% 45%;
+    --silver: 330 10% 70%;
 
     /* Shadows */
-    --shadow-glow: 0 0 30px hsl(140 66% 51% / 0.4);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.7);
+    --shadow-glow: 0 0 30px hsl(330 70% 55% / 0.4);
+    --shadow-card: 0 4px 24px hsl(330 30% 0% / 0.6);
 
     /* Game specific gradients */
-    --game-field-start: 0 0% 15%;
-    --game-field-end: 0 0% 8%;
+    --game-field-start: 330 20% 12%;
+    --game-field-end: 330 25% 5%;
 
-    /* Title color - Green */
-    --title-gold: 140 66% 51%;
+    /* Title color */
+    --title-gold: 330 60% 70%;
 
     /* Sidebar */
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 140 66% 51%;
-    --sidebar-primary-foreground: 0 0% 5%;
-    --sidebar-accent: 140 66% 51%;
-    --sidebar-accent-foreground: 0 0% 8%;
-    --sidebar-border: 140 40% 30%;
-    --sidebar-ring: 140 66% 51%;
+    --sidebar-background: 330 20% 8%;
+    --sidebar-foreground: 330 10% 95%;
+    --sidebar-primary: 330 70% 55%;
+    --sidebar-primary-foreground: 330 10% 98%;
+    --sidebar-accent: 330 60% 70%;
+    --sidebar-accent-foreground: 330 30% 8%;
+    --sidebar-border: 330 15% 20%;
+    --sidebar-ring: 330 70% 55%;
+  }
+
+  /* Blue Theme */
+  html.theme-blue, html.theme-blue:root {
+    --background: 195 25% 6%;
+    --background-gradient-start: 195 30% 4%;
+    --background-gradient-end: 195 20% 10%;
+    --foreground: 195 10% 95%;
+
+    --card: 195 25% 10%;
+    --card-foreground: 195 10% 95%;
+
+    --popover: 195 25% 8%;
+    --popover-foreground: 195 10% 95%;
+
+    /* Cyan Blue - Primary */
+    --primary: 190 70% 50%;
+    --primary-foreground: 195 10% 98%;
+    --primary-glow: 190 75% 60%;
+
+    /* Dark blue accent */
+    --secondary: 195 25% 12%;
+    --secondary-foreground: 195 10% 95%;
+
+    /* Muted tones */
+    --muted: 195 15% 15%;
+    --muted-foreground: 195 10% 55%;
+
+    /* Light cyan - Accent */
+    --accent: 185 60% 65%;
+    --accent-foreground: 195 30% 8%;
+
+    /* Destructive */
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders and inputs */
+    --border: 195 15% 20%;
+    --input: 195 25% 12%;
+    --ring: 190 70% 50%;
+
+    /* Card suit colors */
+    --suit-hearts: 0 75% 50%;
+    --suit-diamonds: 0 75% 50%;
+    --suit-clubs: 195 15% 15%;
+    --suit-spades: 195 15% 15%;
+
+    /* Game specific - Blue accents */
+    --gold: 185 60% 65%;
+    --gold-glow: 185 70% 75%;
+    --bronze: 190 50% 40%;
+    --silver: 195 10% 70%;
+
+    /* Shadows */
+    --shadow-glow: 0 0 30px hsl(190 70% 50% / 0.4);
+    --shadow-card: 0 4px 24px hsl(195 30% 0% / 0.6);
+
+    /* Game specific gradients */
+    --game-field-start: 195 25% 12%;
+    --game-field-end: 195 30% 5%;
+
+    /* Title color */
+    --title-gold: 185 60% 65%;
+
+    /* Sidebar */
+    --sidebar-background: 195 25% 8%;
+    --sidebar-foreground: 195 10% 95%;
+    --sidebar-primary: 190 70% 50%;
+    --sidebar-primary-foreground: 195 10% 98%;
+    --sidebar-accent: 185 60% 65%;
+    --sidebar-accent-foreground: 195 30% 8%;
+    --sidebar-border: 195 15% 20%;
+    --sidebar-ring: 190 70% 50%;
+  }
+
+  /* Purple Theme */
+  html.theme-purple, html.theme-purple:root {
+    --background: 270 20% 6%;
+    --background-gradient-start: 270 25% 4%;
+    --background-gradient-end: 270 15% 10%;
+    --foreground: 270 10% 95%;
+
+    --card: 270 20% 10%;
+    --card-foreground: 270 10% 95%;
+
+    --popover: 270 20% 8%;
+    --popover-foreground: 270 10% 95%;
+
+    /* Purple - Primary */
+    --primary: 270 60% 55%;
+    --primary-foreground: 270 10% 98%;
+    --primary-glow: 270 65% 65%;
+
+    /* Dark purple accent */
+    --secondary: 270 25% 12%;
+    --secondary-foreground: 270 10% 95%;
+
+    /* Muted tones */
+    --muted: 270 15% 15%;
+    --muted-foreground: 270 10% 55%;
+
+    /* Light purple - Accent */
+    --accent: 270 50% 70%;
+    --accent-foreground: 270 30% 8%;
+
+    /* Destructive */
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders and inputs */
+    --border: 270 15% 20%;
+    --input: 270 20% 12%;
+    --ring: 270 60% 55%;
+
+    /* Card suit colors */
+    --suit-hearts: 0 75% 50%;
+    --suit-diamonds: 0 75% 50%;
+    --suit-clubs: 270 15% 15%;
+    --suit-spades: 270 15% 15%;
+
+    /* Game specific - Purple accents */
+    --gold: 270 50% 70%;
+    --gold-glow: 270 60% 80%;
+    --bronze: 270 40% 45%;
+    --silver: 270 10% 70%;
+
+    /* Shadows */
+    --shadow-glow: 0 0 30px hsl(270 60% 55% / 0.4);
+    --shadow-card: 0 4px 24px hsl(270 30% 0% / 0.6);
+
+    /* Game specific gradients */
+    --game-field-start: 270 20% 12%;
+    --game-field-end: 270 25% 5%;
+
+    /* Title color */
+    --title-gold: 270 50% 70%;
+
+    /* Sidebar */
+    --sidebar-background: 270 20% 8%;
+    --sidebar-foreground: 270 10% 95%;
+    --sidebar-primary: 270 60% 55%;
+    --sidebar-primary-foreground: 270 10% 98%;
+    --sidebar-accent: 270 50% 70%;
+    --sidebar-accent-foreground: 270 30% 8%;
+    --sidebar-border: 270 15% 20%;
+    --sidebar-ring: 270 60% 55%;
   }
 }
 
