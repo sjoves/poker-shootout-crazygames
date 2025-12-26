@@ -73,6 +73,9 @@ export interface GameState {
   bonusRoundCount: number;
   // Bonus round time bonus
   bonusTimePoints?: number;
+  // SSC cumulative scoring
+  levelScore: number;
+  cumulativeScore: number;
 }
 
 export interface PowerUp {

@@ -52,14 +52,16 @@ export default function GameOverScreen() {
           return;
         }
         
-        // Save score to leaderboard
+        // Save score to leaderboard - use cumulativeScore for SSC mode
+        const scoreToSave = gameState.mode === 'ssc' ? gameState.cumulativeScore : gameState.score;
+        
         const { error: insertError } = await supabase
           .from('leaderboard_entries')
           .insert({
             user_id: user.id,
             profile_id: profile.id,
             game_mode: gameState.mode,
-            score: gameState.score,
+            score: scoreToSave,
             hands_played: gameState.handsPlayed,
             ssc_level: gameState.mode === 'ssc' ? gameState.sscLevel : null,
             time_seconds: gameState.timeElapsed,
@@ -94,7 +96,9 @@ export default function GameOverScreen() {
 
   const isClassicMode = gameState.mode === 'classic_fc' || gameState.mode === 'classic_cb';
   const isSSC = gameState.mode === 'ssc';
-  const stars = getStarRating(gameState.score);
+  // Use cumulative score for SSC, regular score for other modes
+  const displayScore = isSSC ? gameState.cumulativeScore : gameState.score;
+  const stars = getStarRating(displayScore);
   const messages = [
     "Keep practicing, partner!",
     "Not bad for a greenhorn!",
@@ -139,7 +143,7 @@ export default function GameOverScreen() {
         <p className="text-lg text-muted-foreground mb-6">{messages[stars - 1]}</p>
         
         <div className="text-5xl font-display text-gold text-glow mb-8">
-          {gameState.score.toLocaleString()}
+          {displayScore.toLocaleString()}
         </div>
 
         <div className="bg-card/80 rounded-xl p-4 mb-6 text-left space-y-1">
@@ -161,8 +165,11 @@ export default function GameOverScreen() {
               )}
             </>
           )}
-          {gameState.mode === 'ssc' && (
-            <p className="text-sm text-muted-foreground">Level Reached: {gameState.sscLevel}</p>
+          {isSSC && (
+            <>
+              <p className="text-sm text-muted-foreground">Level Reached: {gameState.sscLevel}</p>
+              <p className="text-sm text-muted-foreground">Final Level Score: {gameState.levelScore.toLocaleString()}</p>
+            </>
           )}
         </div>
 
