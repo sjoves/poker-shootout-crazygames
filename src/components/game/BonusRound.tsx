@@ -227,7 +227,7 @@ export function BonusRound({
       />
 
       {/* Cards Grid */}
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 flex items-center justify-center overflow-auto p-4">
         <div className={cn(
           "gap-1.5 max-w-md mx-auto grid",
           gridCols === 5 ? "grid-cols-5" : "grid-cols-7"
