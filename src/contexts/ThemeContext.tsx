@@ -1,16 +1,15 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-export type ThemeName = 'lucky-green' | 'raiders';
+export type ThemeName = 'lucky-green' | 'acid-green';
 
 interface Theme {
   id: ThemeName;
   name: string;
-  description: string;
 }
 
 export const THEMES: Theme[] = [
-  { id: 'lucky-green', name: 'Lucky Green', description: 'Emerald & mint casino theme' },
-  { id: 'raiders', name: 'Raiders', description: 'Black & silver theme' },
+  { id: 'lucky-green', name: 'Lucky Green' },
+  { id: 'acid-green', name: 'Acid Green' },
 ];
 
 interface ThemeContextValue {
@@ -33,11 +32,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     
     // Remove all theme classes
-    root.classList.remove('theme-raiders');
+    root.classList.remove('theme-acid-green');
     
     // Apply the selected theme class (lucky-green is default, no class needed)
-    if (theme === 'raiders') {
-      root.classList.add('theme-raiders');
+    if (theme === 'acid-green') {
+      root.classList.add('theme-acid-green');
     }
     
     localStorage.setItem(THEME_STORAGE_KEY, theme);

@@ -122,8 +122,8 @@
     --sidebar-ring: 160 70% 40%;
   }
 
-  /* Raiders Theme - Black & Silver */
-  html.theme-raiders, html.theme-raiders:root {
+  /* Acid Green Theme */
+  html.theme-acid-green, html.theme-acid-green:root {
     --background: 140 25% 8%;
     --background-gradient-start: 0 0% 4%;
     --background-gradient-end: 140 40% 14%;
