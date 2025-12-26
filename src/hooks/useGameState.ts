@@ -40,6 +40,8 @@ const INITIAL_STATE: GameState = {
   leftoverPenalty: 0,
   bonusRoundCount: 0,
   bonusTimePoints: 0,
+  levelScore: 0,
+  cumulativeScore: 0,
 };
 
 export function useGameState() {
@@ -148,6 +150,8 @@ export function useGameState() {
       const newHandsPlayed = prev.handsPlayed + 1;
       const newRawScore = prev.rawScore + multipliedPoints;
       const newScore = prev.score + multipliedPoints;
+      const newLevelScore = prev.levelScore + multipliedPoints;
+      const newCumulativeScore = prev.cumulativeScore + multipliedPoints;
 
       // Determine if cards should be recycled back into deck
       const isSSCNonStatic = isSSC && prev.sscPhase !== 'static';
@@ -168,6 +172,8 @@ export function useGameState() {
           ...prev,
           score: newScore,
           rawScore: newRawScore,
+          levelScore: newLevelScore,
+          cumulativeScore: newCumulativeScore,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
           currentHand: modifiedResult,
@@ -214,6 +220,8 @@ export function useGameState() {
         ...prev,
         score: newScore,
         rawScore: newRawScore,
+        levelScore: newLevelScore,
+        cumulativeScore: newCumulativeScore,
         handsPlayed: newHandsPlayed,
         selectedCards: [],
         currentHand: modifiedResult,
@@ -241,12 +249,16 @@ export function useGameState() {
       const totalPoints = multipliedPoints + timeBonusPoints;
       const newScore = prev.score + totalPoints;
       const newRawScore = prev.rawScore + totalPoints;
+      const newLevelScore = prev.levelScore + totalPoints;
+      const newCumulativeScore = prev.cumulativeScore + totalPoints;
 
       // Bonus round completes after one hand submission
       return {
         ...prev,
         score: newScore,
         rawScore: newRawScore,
+        levelScore: newLevelScore,
+        cumulativeScore: newCumulativeScore,
         handsPlayed: prev.handsPlayed + 1,
         selectedCards: [],
         currentHand: modifiedResult,
@@ -312,6 +324,7 @@ export function useGameState() {
       // Reset hand results for new level
       handResultsRef.current = [];
 
+      // Preserve cumulative score, reset level score
       return {
         ...prev,
         sscLevel: newLevel,
@@ -321,9 +334,11 @@ export function useGameState() {
         isBonusLevel: levelInfo.isBonus,
         levelGoal: calculateLevelGoal(newLevel),
         bonusRoundCount: newBonusRoundCount,
-        // Full gameplay reset
+        // Reset level-specific values, preserve cumulative score
         score: 0,
         rawScore: 0,
+        levelScore: 0,
+        // cumulativeScore is preserved from prev
         handsPlayed: 0,
         cardsSelected: 0,
         timeRemaining: 60,

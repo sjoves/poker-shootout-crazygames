@@ -20,9 +20,12 @@ export function useGuestScores() {
   const saveGuestScore = useCallback((gameState: GameState) => {
     const existingScores = getGuestScores();
     
+    // Use cumulative score for SSC mode, regular score for other modes
+    const scoreToSave = gameState.mode === 'ssc' ? gameState.cumulativeScore : gameState.score;
+    
     const newScore: GuestScore = {
       game_mode: gameState.mode,
-      score: gameState.score,
+      score: scoreToSave,
       hands_played: gameState.handsPlayed,
       ssc_level: gameState.mode === 'ssc' ? gameState.sscLevel : null,
       time_seconds: gameState.timeElapsed,
