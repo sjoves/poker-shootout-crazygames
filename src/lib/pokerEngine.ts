@@ -244,6 +244,13 @@ export function calculateLevelGoal(level: number): number {
   // Apply difficulty multiplier
   baseGoal = Math.floor(baseGoal * info.difficultyMultiplier);
   
+  // Apply 10% increase per level starting at level 10
+  if (level >= 10) {
+    const levelsAbove9 = level - 9;
+    const additionalMultiplier = Math.pow(1.1, levelsAbove9);
+    baseGoal = Math.floor(baseGoal * additionalMultiplier);
+  }
+  
   // Bonus levels have higher goals
   if (info.isBonus) {
     baseGoal = Math.floor(baseGoal * 1.5);
