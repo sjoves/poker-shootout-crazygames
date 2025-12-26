@@ -5,17 +5,18 @@ import { Button } from '@/components/ui/button';
 import { GameMode } from '@/types/game';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { TutorialModal } from '@/components/tutorial/TutorialModal';
 import { SettingsModal } from '@/components/settings/SettingsModal';
 import { StarIcon } from '@heroicons/react/24/solid';
 import { Target, Zap, Trophy } from 'lucide-react';
-import logo from '@/assets/raiders-logo.svg';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isPremium, requiresAdForMode, markAdWatchedForMode, openCheckout, loading } = useSubscription();
+  const { currentLogo } = useTheme();
   const [selectedMode, setSelectedMode] = useState<'classic' | 'blitz' | 'ssc' | null>(null);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -58,7 +59,7 @@ export default function SplashScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-12"
       >
-        <img src={logo} alt="Poker Shootout" className="w-96 md:w-[32rem] mx-auto mb-4" />
+        <img src={currentLogo} alt="Poker Shootout" className="w-96 md:w-[32rem] mx-auto mb-4" />
         <p className="text-lg text-muted-foreground">
           Collect cards. Build hands. Beat the clock.
         </p>
