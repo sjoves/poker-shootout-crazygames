@@ -196,56 +196,13 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
   tick2.stop(now + 0.2);
 }
 
-// 8-bit style music generator
-class EightBitMusic {
+// Background music player using audio file
+class BackgroundMusic {
   private audioCtx: AudioContext;
   private gainNode: GainNode;
+  private source: AudioBufferSourceNode | null = null;
   private isPlaying: boolean = false;
-  private schedulerId: number | null = null;
-  private nextNoteTime: number = 0;
-  private currentNote: number = 0;
-  
-  // 8-bit style melody - upbeat poker/casino vibe
-  private melody = [
-    { note: 392, duration: 0.15 },  // G4
-    { note: 440, duration: 0.15 },  // A4
-    { note: 494, duration: 0.15 },  // B4
-    { note: 523, duration: 0.3 },   // C5
-    { note: 494, duration: 0.15 },  // B4
-    { note: 440, duration: 0.15 },  // A4
-    { note: 392, duration: 0.3 },   // G4
-    { note: 0, duration: 0.15 },    // Rest
-    { note: 330, duration: 0.15 },  // E4
-    { note: 392, duration: 0.15 },  // G4
-    { note: 440, duration: 0.3 },   // A4
-    { note: 392, duration: 0.15 },  // G4
-    { note: 330, duration: 0.15 },  // E4
-    { note: 294, duration: 0.3 },   // D4
-    { note: 0, duration: 0.15 },    // Rest
-    { note: 330, duration: 0.15 },  // E4
-    { note: 392, duration: 0.15 },  // G4
-    { note: 494, duration: 0.15 },  // B4
-    { note: 523, duration: 0.3 },   // C5
-    { note: 587, duration: 0.15 },  // D5
-    { note: 523, duration: 0.15 },  // C5
-    { note: 494, duration: 0.15 },  // B4
-    { note: 440, duration: 0.3 },   // A4
-    { note: 0, duration: 0.15 },    // Rest
-  ];
-  
-  // Bass line
-  private bassLine = [
-    { note: 196, duration: 0.3 },   // G3
-    { note: 196, duration: 0.3 },   // G3
-    { note: 220, duration: 0.3 },   // A3
-    { note: 220, duration: 0.3 },   // A3
-    { note: 165, duration: 0.3 },   // E3
-    { note: 165, duration: 0.3 },   // E3
-    { note: 147, duration: 0.3 },   // D3
-    { note: 147, duration: 0.3 },   // D3
-  ];
-  
-  private bassIndex: number = 0;
+  private audioBuffer: AudioBuffer | null = null;
 
   constructor(audioCtx: AudioContext) {
     this.audioCtx = audioCtx;
@@ -254,81 +211,38 @@ class EightBitMusic {
   }
 
   setVolume(volume: number) {
-    this.gainNode.gain.setValueAtTime(volume * 0.15, this.audioCtx.currentTime);
+    this.gainNode.gain.setValueAtTime(volume, this.audioCtx.currentTime);
   }
 
-  start(volume: number) {
+  async start(volume: number) {
     if (this.isPlaying) return;
-    this.isPlaying = true;
-    this.setVolume(volume);
-    this.nextNoteTime = this.audioCtx.currentTime;
-    this.scheduleNotes();
+    
+    try {
+      // Load the audio buffer if not already loaded
+      if (!this.audioBuffer) {
+        this.audioBuffer = await loadAudioBuffer(this.audioCtx, '/sounds/background-music.wav');
+      }
+      
+      this.source = this.audioCtx.createBufferSource();
+      this.source.buffer = this.audioBuffer;
+      this.source.loop = true;
+      this.source.connect(this.gainNode);
+      
+      this.setVolume(volume);
+      this.source.start();
+      this.isPlaying = true;
+    } catch (err) {
+      console.error('Failed to start background music:', err);
+    }
   }
 
   stop() {
+    if (this.source) {
+      this.source.stop();
+      this.source.disconnect();
+      this.source = null;
+    }
     this.isPlaying = false;
-    if (this.schedulerId !== null) {
-      cancelAnimationFrame(this.schedulerId);
-      this.schedulerId = null;
-    }
-  }
-
-  private scheduleNotes() {
-    if (!this.isPlaying) return;
-
-    while (this.nextNoteTime < this.audioCtx.currentTime + 0.1) {
-      this.playNote(this.nextNoteTime);
-      this.playBass(this.nextNoteTime);
-      
-      const currentMelodyNote = this.melody[this.currentNote];
-      this.nextNoteTime += currentMelodyNote.duration;
-      this.currentNote = (this.currentNote + 1) % this.melody.length;
-    }
-
-    this.schedulerId = requestAnimationFrame(() => this.scheduleNotes());
-  }
-
-  private playNote(time: number) {
-    const noteData = this.melody[this.currentNote];
-    if (noteData.note === 0) return; // Rest
-
-    const osc = this.audioCtx.createOscillator();
-    const noteGain = this.audioCtx.createGain();
-    
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(noteData.note, time);
-    
-    noteGain.gain.setValueAtTime(0.3, time);
-    noteGain.gain.exponentialRampToValueAtTime(0.01, time + noteData.duration * 0.9);
-    
-    osc.connect(noteGain);
-    noteGain.connect(this.gainNode);
-    
-    osc.start(time);
-    osc.stop(time + noteData.duration);
-  }
-
-  private playBass(time: number) {
-    // Play bass note every 2 melody notes
-    if (this.currentNote % 3 !== 0) return;
-    
-    const bassData = this.bassLine[this.bassIndex];
-    this.bassIndex = (this.bassIndex + 1) % this.bassLine.length;
-
-    const osc = this.audioCtx.createOscillator();
-    const bassGain = this.audioCtx.createGain();
-    
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(bassData.note, time);
-    
-    bassGain.gain.setValueAtTime(0.4, time);
-    bassGain.gain.exponentialRampToValueAtTime(0.01, time + bassData.duration * 0.8);
-    
-    osc.connect(bassGain);
-    bassGain.connect(this.gainNode);
-    
-    osc.start(time);
-    osc.stop(time + bassData.duration);
   }
 }
 
@@ -347,14 +261,14 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
-  const musicRef = useRef<EightBitMusic | null>(null);
+  const musicRef = useRef<BackgroundMusic | null>(null);
 
   // Initialize AudioContext on first user interaction
   useEffect(() => {
     const initAudioContext = () => {
       if (!audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        musicRef.current = new EightBitMusic(audioCtxRef.current);
+        musicRef.current = new BackgroundMusic(audioCtxRef.current);
       }
     };
 
@@ -393,7 +307,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     // Ensure AudioContext is created
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      musicRef.current = new EightBitMusic(audioCtxRef.current);
+      musicRef.current = new BackgroundMusic(audioCtxRef.current);
     }
     
     // Resume if suspended
@@ -417,7 +331,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     // Ensure AudioContext is created
     if (!audioCtxRef.current) {
       audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      musicRef.current = new EightBitMusic(audioCtxRef.current);
+      musicRef.current = new BackgroundMusic(audioCtxRef.current);
     }
     
     // Resume if suspended
