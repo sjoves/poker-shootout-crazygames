@@ -145,10 +145,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 >
                   <div className="flex items-center gap-3">
                     <ThemePreview themeId={t.id} />
-                    <div className="text-left">
-                      <p className="font-medium text-foreground">{t.name}</p>
-                      <p className="text-sm text-muted-foreground">{t.description}</p>
-                    </div>
+                    <p className="font-medium text-foreground">{t.name}</p>
                   </div>
                   {theme === t.id && (
                     <CheckIcon className="w-5 h-5 text-primary" />
@@ -166,7 +163,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 function ThemePreview({ themeId }: { themeId: ThemeName }) {
   const colors = themeId === 'lucky-green' 
     ? { bg: '#0d1a14', primary: '#1a9c6c', accent: '#4de6ac' }
-    : { bg: '#141414', primary: '#5ccc7a', accent: '#5ccc7a' };
+    : { bg: '#0a0a0a', primary: '#a3e635', accent: '#d9f99d' };
 
   return (
     <div 
