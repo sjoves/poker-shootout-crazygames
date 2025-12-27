@@ -13,6 +13,8 @@ import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { BonusRound } from '@/components/game/BonusRound';
 import { GameMode } from '@/types/game';
 import { TrophyIcon, StarIcon, BoltIcon } from '@heroicons/react/24/outline';
+import { Shuffle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 
 export default function GameScreen() {
@@ -342,7 +344,6 @@ export default function GameScreen() {
             deck={state.deck}
             selectedCardIds={selectedIds}
             onSelectCard={selectCard}
-            onReshuffle={reshuffleUnselected}
           />
         )}
         {isBonusRound && (
@@ -374,9 +375,18 @@ export default function GameScreen() {
           </div>
         )}
 
-        {/* Hand display overlay - positioned at bottom */}
+        {/* Reshuffle button and Hand display overlay - positioned at bottom */}
         {!isBonusRound && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={reshuffleUnselected}
+              className="gap-2 bg-card/80 backdrop-blur-sm border-border hover:bg-card"
+            >
+              <Shuffle className="w-4 h-4" />
+              Reshuffle
+            </Button>
             <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
           </div>
         )}
