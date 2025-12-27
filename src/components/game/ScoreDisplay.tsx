@@ -97,7 +97,7 @@ export function ScorePanel({
   };
   
   return (
-    <div className="flex items-center justify-center gap-3 p-3">
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3">
       {/* Main stats pill */}
       <div className="flex items-center gap-4 bg-transparent rounded-full px-5 py-2.5 border border-primary">
         {/* Score */}
