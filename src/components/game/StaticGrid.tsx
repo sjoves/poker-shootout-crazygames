@@ -3,21 +3,18 @@ import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAudio } from '@/contexts/AudioContext';
-import { Button } from '@/components/ui/button';
-import { Shuffle } from 'lucide-react';
 
 interface StaticGridProps {
   deck: Card[];
   selectedCardIds: string[];
   onSelectCard: (card: Card) => void;
-  onReshuffle?: () => void;
 }
 
 // Show at most 50% of the deck (26 cards), arranged in 5 columns x 5 rows = 25 cards max
 const MAX_VISIBLE_CARDS = 25;
 const GRID_COLUMNS = 5;
 
-export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }: StaticGridProps) {
+export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
   // Only show up to MAX_VISIBLE_CARDS
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
@@ -62,18 +59,6 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard, onReshuffle }:
           );
         })}
       </div>
-      
-      {onReshuffle && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onReshuffle}
-          className="gap-2"
-        >
-          <Shuffle className="w-4 h-4" />
-          Reshuffle
-        </Button>
-      )}
     </motion.div>
   );
 }
