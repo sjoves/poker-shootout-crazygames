@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Trophy, Target, Flame, LogOut, Edit2, Check, X } from 'lucide-react';
@@ -21,8 +21,13 @@ export default function AccountScreen() {
   const [saving, setSaving] = useState(false);
 
   // Redirect if not logged in
+  useEffect(() => {
+    if (!user) {
+      navigate('/auth');
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate('/auth');
     return null;
   }
 
