@@ -384,6 +384,10 @@ export function useGameState() {
         isBonusLevel: levelInfo.isBonus,
         levelGoal: calculateLevelGoal(newLevel),
         bonusRoundCount: newBonusRoundCount,
+        // Ensure game is playing and not paused for new level
+        isPlaying: true,
+        isPaused: false,
+        isGameOver: false,
         // Reset level-specific values, preserve cumulative score
         score: 0,
         rawScore: 0,
