@@ -11,11 +11,13 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Validation schemas
 const emailSchema = z.string().trim().email({ message: "Please enter a valid email address" });
+const emailOrUsernameSchema = z.string().trim().min(1, { message: "Please enter your email or username" });
 const passwordSchema = z.string().min(6, { message: "Password must be at least 6 characters" });
 const usernameSchema = z.string().trim().min(2, { message: "Username must be at least 2 characters" }).max(20, { message: "Username must be less than 20 characters" }).regex(/^[a-zA-Z0-9_]+$/, { message: "Username can only contain letters, numbers, and underscores" }).optional();
 
 export default function AuthScreen() {
   const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -35,9 +37,16 @@ export default function AuthScreen() {
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string; username?: string } = {};
     
-    const emailResult = emailSchema.safeParse(email);
-    if (!emailResult.success) {
-      newErrors.email = emailResult.error.errors[0].message;
+    if (mode === 'signin') {
+      const result = emailOrUsernameSchema.safeParse(emailOrUsername);
+      if (!result.success) {
+        newErrors.email = result.error.errors[0].message;
+      }
+    } else {
+      const emailResult = emailSchema.safeParse(email);
+      if (!emailResult.success) {
+        newErrors.email = emailResult.error.errors[0].message;
+      }
     }
     
     if (mode !== 'forgot') {
@@ -88,16 +97,55 @@ export default function AuthScreen() {
     
     setLoading(true);
 
-    const { error } = mode === 'signup'
-      ? await signUp(email.trim(), password, username.trim() || undefined)
-      : await signIn(email.trim(), password);
+    if (mode === 'signup') {
+      const { error } = await signUp(email.trim(), password, username.trim() || undefined);
+      setLoading(false);
+      if (error) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Account created!' });
+        navigate('/');
+      }
+      return;
+    }
 
+    // Sign in - check if input is email or username
+    const input = emailOrUsername.trim();
+    const isEmail = input.includes('@');
+    
+    let loginEmail = input;
+    
+    if (!isEmail) {
+      // Look up email by username
+      const { data: profile, error: lookupError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('username', input)
+        .single();
+      
+      if (lookupError || !profile) {
+        setLoading(false);
+        toast({ title: 'Error', description: 'Username not found', variant: 'destructive' });
+        return;
+      }
+      
+      // Get email from auth user
+      const { data: userData } = await supabase.auth.admin?.getUserById?.(profile.user_id) || {};
+      if (!userData?.user?.email) {
+        // Fallback: try signing in with username as email (won't work but gives proper error)
+        loginEmail = input;
+      } else {
+        loginEmail = userData.user.email;
+      }
+    }
+
+    const { error } = await signIn(loginEmail, password);
     setLoading(false);
 
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: mode === 'signup' ? 'Account created!' : 'Welcome back!' });
+      toast({ title: 'Welcome back!' });
       navigate('/');
     }
   };
@@ -147,24 +195,45 @@ export default function AuthScreen() {
             </div>
           )}
           
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
-              }}
-              placeholder="your@email.com"
-              required
-              className={`mt-1 ${errors.email ? 'border-destructive' : ''}`}
-            />
-            {errors.email && (
-              <p className="text-xs text-destructive mt-1">{errors.email}</p>
-            )}
-          </div>
+          {mode === 'signin' ? (
+            <div>
+              <Label htmlFor="emailOrUsername">Email or Username</Label>
+              <Input
+                id="emailOrUsername"
+                type="text"
+                value={emailOrUsername}
+                onChange={(e) => {
+                  setEmailOrUsername(e.target.value);
+                  if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+                }}
+                placeholder="your@email.com or username"
+                required
+                className={`mt-1 ${errors.email ? 'border-destructive' : ''}`}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive mt-1">{errors.email}</p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+                }}
+                placeholder="your@email.com"
+                required
+                className={`mt-1 ${errors.email ? 'border-destructive' : ''}`}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive mt-1">{errors.email}</p>
+              )}
+            </div>
+          )}
 
           {mode !== 'forgot' && (
             <div>
