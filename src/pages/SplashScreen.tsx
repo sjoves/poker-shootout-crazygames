@@ -19,7 +19,7 @@ import { Target, Zap, Trophy, Gift, Award } from 'lucide-react';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { isPremium, requiresAdForMode, markAdWatchedForMode, openCheckout, loading } = useSubscription();
   const { currentLogo } = useTheme();
   const {
@@ -60,6 +60,17 @@ export default function SplashScreen() {
       }, modeName);
     } else {
       navigate(`/play/${mode}`);
+    }
+  };
+
+  const handleSSCStart = (startLevel: number) => {
+    if (requiresAdForMode('ssc')) {
+      rewardedAd.showAd('mode_unlock', () => {
+        markAdWatchedForMode('ssc');
+        navigate(`/play/ssc?startLevel=${startLevel}`);
+      }, 'SSC Mode');
+    } else {
+      navigate(`/play/ssc?startLevel=${startLevel}`);
     }
   };
 
@@ -177,16 +188,30 @@ export default function SplashScreen() {
         </div>
 
         {/* SSC Mode */}
-        <Button
-          variant="outline"
-          size="lg"
-          className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
-          onClick={() => handleModeSelect('ssc')}
-        >
-          <Trophy className="w-5 h-5 text-primary" />
-          Sharp Shooter Challenge
-          {getModeLabel('ssc')}
-        </Button>
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full h-14 text-lg font-display border-primary bg-transparent hover:bg-primary/10 hover:text-foreground gap-2"
+            onClick={() => setSelectedMode(selectedMode === 'ssc' ? null : 'ssc')}
+          >
+            <Trophy className="w-5 h-5 text-primary" />
+            Sharp Shooter Challenge
+            {getModeLabel('ssc')}
+          </Button>
+          {selectedMode === 'ssc' && (
+            <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
+              <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(1)}>
+                Start Level 1
+              </Button>
+              {user && profile?.highest_ssc_level && profile.highest_ssc_level > 1 && (
+                <Button variant="secondary" className="flex-1" onClick={() => handleSSCStart(profile.highest_ssc_level)}>
+                  Continue Lv.{profile.highest_ssc_level}
+                </Button>
+              )}
+            </motion.div>
+          )}
+        </div>
 
         {/* Daily Challenges - Collapsible */}
         {user && challenges.length > 0 && (

@@ -55,7 +55,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ username: string | null; avatar_url: string | null; highest_ssc_level: number } | null>(null);
   const syncedRef = useRef(false);
 
   useEffect(() => {
@@ -100,7 +100,7 @@ export function useAuth() {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from('profiles')
-      .select('username, avatar_url')
+      .select('username, avatar_url, highest_ssc_level')
       .eq('user_id', userId)
       .maybeSingle();
     
@@ -146,7 +146,7 @@ export function useAuth() {
       .eq('user_id', user.id);
     
     if (!error) {
-      setProfile(prev => prev ? { ...prev, username } : { username, avatar_url: null });
+      setProfile(prev => prev ? { ...prev, username } : { username, avatar_url: null, highest_ssc_level: 0 });
     }
     
     return { error };
