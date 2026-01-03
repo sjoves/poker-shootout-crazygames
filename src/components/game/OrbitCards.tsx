@@ -309,16 +309,6 @@ export function OrbitCards({
           />
         ))}
 
-        {/* Ring labels */}
-        {showRingGuides && baseRadii.map((_, index) => (
-          <div
-            key={`label-${index}`}
-            className="absolute top-1/2 left-1/2 text-[8px] text-primary/40 pointer-events-none z-5"
-            style={{ transform: `translate(-50%, -50%) translateY(${-currentRadii[index] - 8}px)` }}
-          >
-            {[`Inner ${cardsPerRing[0]}×0.4`, `Mid ${cardsPerRing[1]}×0.5`, `Outer ${cardsPerRing[2]}×0.6`][index]}
-          </div>
-        ))}
 
         {/* Debug info */}
         {showRingGuides && (
