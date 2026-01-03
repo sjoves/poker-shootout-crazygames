@@ -154,10 +154,12 @@ export function calculateLeftoverPenalty(cards: Card[]): number {
 
 // SSC Level structure:
 // IMPORTANT: Bonus rounds are separate from numbered levels.
-// Levels follow strict 12-level rotation starting at cycle 4:
-// 1-3 Static, 4-6 Conveyor, 7-9 Falling, 10-12 Orbit (Orbit starts at Level 37, cycle 4)
-// Cycles 1-3 (Levels 1-36): 9-level rotation (Static, Conveyor, Falling)
-// Cycles 4+: 12-level rotation (Static, Conveyor, Falling, Orbit)
+// Cycle 1 (Levels 1-12): 9-level rotation (Static 1-3, Conveyor 4-6, Falling 7-9, then repeats 10-12 as Static)
+// Cycle 2+ (Level 13 onwards): 12-level rotation with Orbit
+// - Static: 13-15, 25-27, etc.
+// - Conveyor: 16-18, 28-30, etc.
+// - Falling: 19-21, 31-33, etc.
+// - Orbit: 22-24, 34-36, etc.
 // Bonus rounds occur AFTER every 3 levels but don't count as levels.
 
 export interface SSCLevelInfo {
@@ -168,14 +170,15 @@ export interface SSCLevelInfo {
 
 // Get level info for a numbered level (NOT bonus round)
 export function getSSCLevelInfo(level: number): SSCLevelInfo {
-  // Orbit mode starts at Level 37 (4th cycle)
-  const orbitStartLevel = 37;
+  // Orbit mode starts at Level 13 (2nd cycle)
+  const orbitStartLevel = 13;
   
   let phase: 'static' | 'conveyor' | 'falling' | 'orbit';
   let round: number;
   
   if (level < orbitStartLevel) {
-    // Cycles 1-3: 9-level rotation (no Orbit)
+    // Cycle 1 (Levels 1-12): 9-level rotation (no Orbit)
+    // Within cycle 1, it repeats the 9-level pattern
     const cyclePosition = ((level - 1) % 9) + 1; // 1-9
     
     if (cyclePosition <= 3) {
@@ -186,10 +189,10 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
       phase = 'falling';
     }
     
-    round = Math.ceil(level / 9);
+    round = 1;
   } else {
-    // Cycles 4+: 12-level rotation with Orbit
-    const levelInOrbitEra = level - orbitStartLevel + 1; // 1-indexed from Level 37
+    // Cycle 2+: 12-level rotation with Orbit
+    const levelInOrbitEra = level - orbitStartLevel + 1; // 1-indexed from Level 13
     const cyclePosition = ((levelInOrbitEra - 1) % 12) + 1; // 1-12
     
     if (cyclePosition <= 3) {
@@ -202,8 +205,8 @@ export function getSSCLevelInfo(level: number): SSCLevelInfo {
       phase = 'orbit';
     }
     
-    // Round 4 starts at Level 37
-    round = 3 + Math.ceil(levelInOrbitEra / 12);
+    // Round 2 starts at Level 13
+    round = 1 + Math.ceil(levelInOrbitEra / 12);
   }
   
   // Difficulty multiplier increases slightly each cycle
