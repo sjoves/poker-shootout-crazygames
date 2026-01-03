@@ -54,35 +54,55 @@ const INITIAL_STATE: GameState = {
   currentMultiplier: 1,
   starRating: 0,
   hasSeenSSCExplainer: false,
+  // Bonus round reward system
+  pendingReward: null,
+  rewardTier: null,
+  showLootBox: false,
+  inventoryFull: false,
 };
 
-// Get available power-ups that haven't been earned yet
-function getAvailablePowerUps(earnedPowerUps: string[], bonusRoundCount: number): string[] {
-  // Filter to power-ups not yet earned
-  const unearnedPowerUps = POWER_UPS.filter(p => !earnedPowerUps.includes(p.id));
-  
-  // Determine max tier based on bonus round count
-  // Rounds 1-2: tier 1 only, Rounds 3-4: tier 1-2, Rounds 5+: all tiers
-  let maxTier = 1;
-  if (bonusRoundCount >= 3) maxTier = 2;
-  if (bonusRoundCount >= 5) maxTier = 3;
-  
-  // Filter by tier
-  const eligiblePowerUps = unearnedPowerUps.filter(p => p.tier <= maxTier);
-  
-  return eligiblePowerUps.map(p => p.id);
+// Maximum number of power-ups a player can hold
+const MAX_POWER_UPS = 3;
+
+// Determine reward tier based on bonus round score
+// Bronze: < 500 pts (Common/Tier 1)
+// Silver: 500-1200 pts (Uncommon/Tier 2)  
+// Gold: > 1200 pts (Rare/Tier 3)
+export type RewardTier = 'bronze' | 'silver' | 'gold';
+
+export function getRewardTier(score: number): RewardTier {
+  if (score > 1200) return 'gold';
+  if (score >= 500) return 'silver';
+  return 'bronze';
 }
 
-// Generate 3 random power-up choices from available pool
-function generatePowerUpChoices(earnedPowerUps: string[], bonusRoundCount: number): string[] {
-  const available = getAvailablePowerUps(earnedPowerUps, bonusRoundCount);
+export function getTierDisplayInfo(tier: RewardTier): { name: string; color: string; emoji: string } {
+  switch (tier) {
+    case 'gold':
+      return { name: 'Gold', color: 'text-amber-400', emoji: '🥇' };
+    case 'silver':
+      return { name: 'Silver', color: 'text-slate-300', emoji: '🥈' };
+    case 'bronze':
+      return { name: 'Bronze', color: 'text-amber-600', emoji: '🥉' };
+  }
+}
+
+// Get power-ups available for a specific tier
+function getPowerUpsForTier(tier: RewardTier): string[] {
+  const tierNumber = tier === 'gold' ? 3 : tier === 'silver' ? 2 : 1;
+  return POWER_UPS.filter(p => p.tier === tierNumber).map(p => p.id);
+}
+
+// Select a random power-up based on bonus round score
+function selectRewardPowerUp(score: number): string | null {
+  const tier = getRewardTier(score);
+  const availablePowerUps = getPowerUpsForTier(tier);
   
-  if (available.length === 0) return [];
-  if (available.length <= 3) return available;
+  if (availablePowerUps.length === 0) return null;
   
-  // Shuffle and take 3
-  const shuffled = [...available].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, 3);
+  // Randomly select one power-up from the tier
+  const randomIndex = Math.floor(Math.random() * availablePowerUps.length);
+  return availablePowerUps[randomIndex];
 }
 
 export function useGameState() {
@@ -299,9 +319,12 @@ export function useGameState() {
       const newLevelScore = prev.levelScore + totalPoints;
       const newCumulativeScore = prev.cumulativeScore + totalPoints;
 
-      // Generate power-up choices for the player
-      const newBonusRoundCount = prev.bonusRoundCount;
-      const choices = generatePowerUpChoices(prev.earnedPowerUps, newBonusRoundCount);
+      // Determine reward tier and select power-up based on total score
+      const tier = getRewardTier(totalPoints);
+      const rewardPowerUp = selectRewardPowerUp(totalPoints);
+      
+      // Check if inventory is full
+      const isInventoryFull = prev.earnedPowerUps.length >= MAX_POWER_UPS;
 
       // Bonus round completes after one hand submission
       return {
@@ -315,8 +338,14 @@ export function useGameState() {
         currentHand: result,
         isLevelComplete: true,
         bonusTimePoints: timeBonusPoints,
-        powerUpChoices: choices,
-        showPowerUpSelection: choices.length > 0,
+        // New reward system
+        pendingReward: rewardPowerUp,
+        rewardTier: tier,
+        showLootBox: rewardPowerUp !== null,
+        inventoryFull: isInventoryFull && rewardPowerUp !== null,
+        // Clear old power-up selection system
+        powerUpChoices: [],
+        showPowerUpSelection: false,
       };
     });
   }, []);
@@ -329,6 +358,63 @@ export function useGameState() {
     }));
   }, []);
 
+  // Claim the pending reward (add to inventory)
+  const claimReward = useCallback(() => {
+    setState(prev => {
+      if (!prev.pendingReward || prev.inventoryFull) return prev;
+      
+      const newEarnedPowerUps = [...prev.earnedPowerUps, prev.pendingReward];
+      const newActivePowerUps = [...prev.activePowerUps, prev.pendingReward];
+      
+      return {
+        ...prev,
+        earnedPowerUps: newEarnedPowerUps,
+        activePowerUps: newActivePowerUps,
+        pendingReward: null,
+        rewardTier: null,
+        showLootBox: false,
+        inventoryFull: false,
+      };
+    });
+  }, []);
+
+  // Swap: discard an existing power-up to make room for the new one
+  const swapPowerUp = useCallback((discardPowerUpId: string) => {
+    setState(prev => {
+      if (!prev.pendingReward) return prev;
+      
+      // Remove the discarded power-up
+      const newEarnedPowerUps = prev.earnedPowerUps.filter(id => id !== discardPowerUpId);
+      const newActivePowerUps = prev.activePowerUps.filter(id => id !== discardPowerUpId);
+      
+      // Add the new one
+      newEarnedPowerUps.push(prev.pendingReward);
+      newActivePowerUps.push(prev.pendingReward);
+      
+      return {
+        ...prev,
+        earnedPowerUps: newEarnedPowerUps,
+        activePowerUps: newActivePowerUps,
+        pendingReward: null,
+        rewardTier: null,
+        showLootBox: false,
+        inventoryFull: false,
+      };
+    });
+  }, []);
+
+  // Discard the new reward (keep current inventory)
+  const discardReward = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      pendingReward: null,
+      rewardTier: null,
+      showLootBox: false,
+      inventoryFull: false,
+    }));
+  }, []);
+
+  // Legacy: kept for backward compatibility but now unused
   const selectPowerUp = useCallback((powerUpId: string) => {
     setState(prev => {
       if (!prev.powerUpChoices.includes(powerUpId)) return prev;
@@ -351,6 +437,10 @@ export function useGameState() {
       ...prev,
       powerUpChoices: [],
       showPowerUpSelection: false,
+      showLootBox: false,
+      pendingReward: null,
+      rewardTier: null,
+      inventoryFull: false,
     }));
   }, []);
 
@@ -656,5 +746,9 @@ export function useGameState() {
     resetGame,
     getHandResults,
     markExplainerSeen,
+    // New reward system
+    claimReward,
+    swapPowerUp,
+    discardReward,
   };
 }

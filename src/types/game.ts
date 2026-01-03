@@ -42,6 +42,8 @@ export interface HandResult {
   totalPoints: number;
 }
 
+export type RewardTier = 'bronze' | 'silver' | 'gold';
+
 export interface GameState {
   mode: GameMode;
   score: number;
@@ -91,6 +93,11 @@ export interface GameState {
   starRating: number;
   // SSC explainer shown flag
   hasSeenSSCExplainer: boolean;
+  // Bonus round reward system
+  pendingReward: string | null; // Power-up ID earned from bonus round
+  rewardTier: RewardTier | null; // Tier of the reward
+  showLootBox: boolean; // Show loot box animation
+  inventoryFull: boolean; // Whether player needs to swap/discard
 }
 
 export interface PowerUp {
