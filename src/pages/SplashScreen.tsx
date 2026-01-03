@@ -33,6 +33,7 @@ export default function SplashScreen() {
     canClaimReward,
     claimDailyReward,
     todayReward,
+    getTimeUntilNextReward,
   } = useRetention();
 
   const [selectedMode, setSelectedMode] = useState<'classic' | 'blitz' | 'ssc' | null>(null);
@@ -318,6 +319,7 @@ export default function SplashScreen() {
         canClaim={canClaimReward}
         onClaim={claimDailyReward}
         todayReward={todayReward}
+        timeUntilNext={getTimeUntilNextReward()}
       />
       <RewardedAd
         isOpen={rewardedAd.isOpen}
