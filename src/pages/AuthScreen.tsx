@@ -23,28 +23,54 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(true);
   const [errors, setErrors] = useState<{ email?: string; password?: string; username?: string; confirmPassword?: string }>({});
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Listen for PASSWORD_RECOVERY event to show reset form
+  // Check URL hash for recovery tokens on mount and listen for PASSWORD_RECOVERY event
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // Check if URL contains recovery parameters (type=recovery in hash)
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const type = hashParams.get('type');
+    const accessToken = hashParams.get('access_token');
+    const errorDescription = hashParams.get('error_description');
+    
+    // Handle error in URL
+    if (errorDescription) {
+      toast({ title: 'Error', description: decodeURIComponent(errorDescription), variant: 'destructive' });
+      setInitializing(false);
+      return;
+    }
+    
+    // If this is a recovery link, set mode immediately before auth processes
+    if (type === 'recovery' && accessToken) {
+      setMode('reset');
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setMode('reset');
       }
+      setInitializing(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Also mark as initialized after a short delay in case no auth event fires
+    const timeout = setTimeout(() => setInitializing(false), 500);
 
-  // Redirect to home if already logged in (but NOT if in reset mode)
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, [toast]);
+
+  // Redirect to home if already logged in (but NOT if in reset mode or still initializing)
   useEffect(() => {
-    if (user && mode !== 'reset') {
+    if (!initializing && user && mode !== 'reset') {
       navigate('/');
     }
-  }, [user, mode, navigate]);
+  }, [user, mode, navigate, initializing]);
 
   const validateForm = (): boolean => {
     const newErrors: { email?: string; password?: string; username?: string; confirmPassword?: string } = {};
