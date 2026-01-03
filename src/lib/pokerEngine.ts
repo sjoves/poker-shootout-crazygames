@@ -211,14 +211,24 @@ export function getSSCSpeed(level: number): number {
   
   if (info.phase === 'static') return 0;
   
-  // SIGNIFICANTLY higher base speeds for moving modes
-  // Level 4 (first Conveyor) and Level 7 (first Falling) should feel fast immediately
-  const baseSpeed = info.phase === 'conveyor' ? 1.2 : 1.8; // Increased from 0.5/0.7
+  // Base speeds for moving modes
+  // Conveyor stays at 1.2, Falling reduced by 15% from 1.8 to 1.53 for first cycle
+  let baseSpeed: number;
   
-  // Starting Level 10, increase speed by 2% linearly per level
-  if (level >= 10) {
-    const levelsAbove9 = level - 9;
-    const speedIncrease = 1 + (levelsAbove9 * 0.02);
+  if (info.phase === 'conveyor') {
+    baseSpeed = 1.2;
+  } else {
+    // Falling mode: reduced speed (15% slower) for first cycle (levels 7-9)
+    // Resume normal speed with increases starting at level 16 (second falling cycle)
+    const isFirstFallingCycle = level >= 7 && level <= 9;
+    baseSpeed = isFirstFallingCycle ? 1.53 : 1.8; // 1.8 * 0.85 = 1.53
+  }
+  
+  // Speed increases only apply starting at Level 16 (second falling cycle)
+  // 2% linear increase per level above 15
+  if (level >= 16) {
+    const levelsAbove15 = level - 15;
+    const speedIncrease = 1 + (levelsAbove15 * 0.02);
     return baseSpeed * speedIncrease;
   }
   
