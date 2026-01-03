@@ -98,6 +98,8 @@ export interface GameState {
   rewardTier: RewardTier | null; // Tier of the reward
   showLootBox: boolean; // Show loot box animation
   inventoryFull: boolean; // Whether player needs to swap/discard
+  // Phase override for Classic/Blitz modes (for Play Again persistence)
+  phaseOverride?: string;
 }
 
 export interface PowerUp {

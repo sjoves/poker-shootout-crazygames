@@ -115,7 +115,7 @@ export default function GameScreen() {
         if (isTestBonus) {
           startGame('ssc', true);
         } else if (mode) {
-          startGame(mode as GameMode, false, startLevel);
+          startGame(mode as GameMode, false, startLevel, phaseOverride || undefined);
         }
       }, 1000);
       return () => clearTimeout(timer);
