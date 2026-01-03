@@ -19,9 +19,9 @@ const GAME_MODES: { value: GameMode | 'all'; label: string; icon: React.ReactNod
 ];
 
 function getRankIcon(rank: number) {
-  if (rank === 1) return <Trophy className="w-6 h-6 text-primary" />;
-  if (rank === 2) return <Medal className="w-6 h-6 text-primary/80" />;
-  if (rank === 3) return <Award className="w-6 h-6 text-primary/60" />;
+  if (rank === 1) return <Trophy className="w-6 h-6 text-gold" />;
+  if (rank === 2) return <Medal className="w-6 h-6 text-silver" />;
+  if (rank === 3) return <Award className="w-6 h-6 text-bronze" />;
   return <span className="w-6 h-6 flex items-center justify-center text-muted-foreground font-mono">#{rank}</span>;
 }
 
@@ -134,9 +134,9 @@ export default function LeaderboardScreen() {
                   transition={{ delay: index * 0.03 }}
                   className={`
                     relative overflow-hidden rounded-xl border
-                    ${index === 0 ? 'bg-gradient-to-r from-primary/15 to-primary/5 border-primary/50' : ''}
-                    ${index === 1 ? 'bg-gradient-to-r from-muted/30 to-muted/10 border-muted-foreground/30' : ''}
-                    ${index === 2 ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30' : ''}
+                    ${index === 0 ? 'bg-gradient-to-r from-gold/15 to-gold/5 border-gold/50' : ''}
+                    ${index === 1 ? 'bg-gradient-to-r from-silver/15 to-silver/5 border-silver/50' : ''}
+                    ${index === 2 ? 'bg-gradient-to-r from-bronze/15 to-bronze/5 border-bronze/50' : ''}
                     ${index > 2 ? 'bg-card/50 border-border' : ''}
                   `}
                 >
