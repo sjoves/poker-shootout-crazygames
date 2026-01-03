@@ -52,6 +52,7 @@ export interface DailyReward {
   claim_date: string;
   reward_type: string;
   reward_value: string;
+  created_at?: string;
 }
 
 export interface Unlockable {
@@ -115,13 +116,14 @@ export function useRetention() {
       setUnlockables(unlockablesData || []);
 
       // Load user-specific data in parallel
+      // Get the most recent reward to check 24-hour window
       const [streakRes, userAchRes, challengesRes, statsRes, unlocksRes, rewardRes] = await Promise.all([
         supabase.from('user_streaks').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('user_achievements').select('*').eq('user_id', user.id),
         supabase.from('daily_challenges').select('*').eq('user_id', user.id).eq('challenge_date', new Date().toISOString().split('T')[0]),
         supabase.from('user_stats').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('user_unlocks').select('unlockable_id').eq('user_id', user.id),
-        supabase.from('daily_rewards').select('*').eq('user_id', user.id).eq('claim_date', new Date().toISOString().split('T')[0]).maybeSingle(),
+        supabase.from('daily_rewards').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       if (streakRes.data) {
@@ -408,9 +410,33 @@ export function useRetention() {
     }
   };
 
+  // Check if 24 hours have passed since last claim
+  const canClaimReward = (): boolean => {
+    if (!todayReward || !todayReward.created_at) return true;
+    const lastClaimTime = new Date(todayReward.created_at).getTime();
+    const now = Date.now();
+    const hoursSinceLastClaim = (now - lastClaimTime) / (1000 * 60 * 60);
+    return hoursSinceLastClaim >= 24;
+  };
+
+  // Get time remaining until next reward
+  const getTimeUntilNextReward = (): { hours: number; minutes: number } | null => {
+    if (!todayReward || !todayReward.created_at) return null;
+    const lastClaimTime = new Date(todayReward.created_at).getTime();
+    const nextClaimTime = lastClaimTime + (24 * 60 * 60 * 1000);
+    const now = Date.now();
+    const remaining = nextClaimTime - now;
+    
+    if (remaining <= 0) return null;
+    
+    const hours = Math.floor(remaining / (1000 * 60 * 60));
+    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    return { hours, minutes };
+  };
+
   // Claim daily reward
   const claimDailyReward = async (): Promise<DailyReward | null> => {
-    if (!user || todayReward) return null;
+    if (!user || !canClaimReward()) return null;
 
     // Weighted random selection
     const totalWeight = REWARD_OPTIONS.reduce((sum, opt) => sum + opt.weight, 0);
@@ -425,7 +451,7 @@ export function useRetention() {
       }
     }
 
-    const reward: Omit<DailyReward, 'claim_date'> & { user_id: string; claim_date: string } = {
+    const reward: Omit<DailyReward, 'claim_date' | 'created_at'> & { user_id: string; claim_date: string } = {
       user_id: user.id,
       claim_date: new Date().toISOString().split('T')[0],
       reward_type: selectedReward.type,
@@ -476,11 +502,12 @@ export function useRetention() {
     clearNewAchievements,
     getChallengeInfo,
     loadRetentionData,
+    getTimeUntilNextReward,
     
     // Helpers
     isAchievementUnlocked: (id: string) => userAchievements.some(ua => ua.achievement_id === id),
     isUnlocked: (id: string) => userUnlocks.includes(id),
-    canClaimReward: !todayReward,
+    canClaimReward: canClaimReward(),
     allChallengesCompleted: challenges.length > 0 && challenges.every(c => c.completed),
   };
 }

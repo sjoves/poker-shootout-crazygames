@@ -11,6 +11,7 @@ interface DailyRewardWheelProps {
   canClaim: boolean;
   onClaim: () => Promise<DailyReward | null>;
   todayReward: DailyReward | null;
+  timeUntilNext: { hours: number; minutes: number } | null;
 }
 
 export function DailyRewardWheel({ 
@@ -18,7 +19,8 @@ export function DailyRewardWheel({
   onClose, 
   canClaim, 
   onClaim,
-  todayReward 
+  todayReward,
+  timeUntilNext
 }: DailyRewardWheelProps) {
   const [spinning, setSpinning] = useState(false);
   const [rotation, setRotation] = useState(0);
@@ -65,8 +67,8 @@ export function DailyRewardWheel({
         </DialogHeader>
 
         <div className="py-6">
-          {/* Already claimed today */}
-          {todayReward && !result && (
+          {/* Already claimed - show countdown */}
+          {!canClaim && todayReward && !result && (
             <div className="text-center space-y-4">
               <div className="w-24 h-24 mx-auto bg-primary/20 rounded-full flex items-center justify-center">
                 <Sparkles className="w-12 h-12 text-primary" />
@@ -77,9 +79,16 @@ export function DailyRewardWheel({
                   {getRewardDisplay(todayReward)}
                 </p>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Come back tomorrow for another spin!
-              </p>
+              {timeUntilNext && (
+                <p className="text-sm text-muted-foreground">
+                  Next reward in: <span className="font-semibold text-primary">{timeUntilNext.hours}h {timeUntilNext.minutes}m</span>
+                </p>
+              )}
+              {!timeUntilNext && (
+                <p className="text-sm text-muted-foreground">
+                  Come back tomorrow for another spin!
+                </p>
+              )}
             </div>
           )}
 
