@@ -45,11 +45,21 @@ export default function SplashScreen() {
   const rewardedAd = useRewardedAd();
 
   // Show daily reward prompt for logged in users - only when canClaimReward is true
-  // canClaimReward is now a boolean that accounts for loading state
+  // Uses sessionStorage to prevent re-triggering on page navigation/refresh within the same session
   useEffect(() => {
     if (user && canClaimReward === true) {
-      const timer = setTimeout(() => setShowRewardWheel(true), 1000);
-      return () => clearTimeout(timer);
+      // Check if we've already shown the modal in this session
+      const sessionKey = `daily_reward_shown_${user.id}`;
+      const alreadyShownThisSession = sessionStorage.getItem(sessionKey);
+      
+      if (!alreadyShownThisSession) {
+        const timer = setTimeout(() => {
+          setShowRewardWheel(true);
+          // Mark as shown for this session
+          sessionStorage.setItem(sessionKey, 'true');
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
     }
   }, [user, canClaimReward]);
 
