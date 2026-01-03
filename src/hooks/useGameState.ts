@@ -59,6 +59,8 @@ const INITIAL_STATE: GameState = {
   rewardTier: null,
   showLootBox: false,
   inventoryFull: false,
+  // Phase override for Classic/Blitz modes (for Play Again persistence)
+  phaseOverride: undefined,
 };
 
 // Power-up inventory is now unlimited - no cap
@@ -109,7 +111,7 @@ export function useGameState() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const handResultsRef = useRef<HandResult[]>([]);
 
-  const startGame = useCallback((mode: GameMode, forceBonus: boolean = false, startLevel: number = 1) => {
+  const startGame = useCallback((mode: GameMode, forceBonus: boolean = false, startLevel: number = 1, phaseOverride?: string) => {
     const isBlitz = mode === 'blitz_fc' || mode === 'blitz_cb';
     const isSSC = mode === 'ssc';
     
@@ -141,6 +143,7 @@ export function useGameState() {
       showPowerUpSelection: false,
       bonusRoundCount: initialBonusCount,
       pendingBonusRound: false,
+      phaseOverride, // Store the phase override for Play Again functionality
     });
     handResultsRef.current = [];
   }, []);

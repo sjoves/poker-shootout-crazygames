@@ -149,7 +149,12 @@ export default function GameOverScreen() {
   ];
 
   const handlePlayAgain = () => {
-    navigate(`/play/${gameState.mode}`);
+    // Preserve the phase override if one was used (for Sitting Duck, Carnival Gallery, Sky is Falling)
+    let url = `/play/${gameState.mode}`;
+    if (gameState.phaseOverride) {
+      url += `?phase=${gameState.phaseOverride}`;
+    }
+    navigate(url);
   };
 
   const handleReplayLevel = () => {
