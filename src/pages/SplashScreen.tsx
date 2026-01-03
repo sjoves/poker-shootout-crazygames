@@ -162,8 +162,8 @@ export default function SplashScreen() {
           </Button>
           {selectedMode === 'classic' && (
             <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
-              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
               <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('classic_cb')}>Carnival Gallery</Button>
+              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('classic_fc')}>Sky is Falling</Button>
             </motion.div>
           )}
         </div>
@@ -182,8 +182,8 @@ export default function SplashScreen() {
           </Button>
           {selectedMode === 'blitz' && (
             <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} className="flex gap-2">
-              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
               <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_cb')}>Carnival Gallery</Button>
+              <Button variant="secondary" className="flex-1" onClick={() => handleModeSelect('blitz_fc')}>Sky is Falling</Button>
             </motion.div>
           )}
         </div>
