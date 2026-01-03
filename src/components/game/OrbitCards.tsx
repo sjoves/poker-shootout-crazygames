@@ -6,10 +6,10 @@ import useSound from 'use-sound';
 
 interface OrbitCard extends Card {
   ring: number;
-  angle: number;
+  baseAngle: number; // Initial angle offset for this card's slot
   speed: number;
   isNew?: boolean;
-  entryTimestamp?: number;
+  entryTime?: number; // Time when card entered orbit (for fly-in animation tracking)
 }
 
 interface OrbitCardsProps {
@@ -87,19 +87,19 @@ export function OrbitCards({
 }: OrbitCardsProps) {
   const [orbitCards, setOrbitCards] = useState<OrbitCard[]>([]);
   const [hiddenDeck, setHiddenDeck] = useState<Card[]>([]);
-  const [breathPhase, setBreathPhase] = useState(0);
+  const [globalTime, setGlobalTime] = useState(0); // Global time for rotation + breathing
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
-  const startTimeRef = useRef<number>(performance.now()); // Fixed timestamp anchor
   const lastTimeRef = useRef<number>(0);
+  const pendingReplenishRef = useRef(false); // Prevent infinite loop
   const [playCardHit] = useSound('/sounds/card-hit.wav', { volume: 0.3 });
 
   // Configuration - 5/8/12 card distribution per ring = 25 total
   const totalRings = 3;
-  const cardsPerRing = [5, 8, 12]; // Inner to outer
-  const ringMultipliers = [1.0, 1.15, 1.3]; // Speed multipliers per ring
+  const cardsPerRing = useMemo(() => [5, 8, 12], []); // Inner to outer
+  const ringMultipliers = useMemo(() => [1.0, 1.15, 1.3], []); // Speed multipliers per ring
   const safeZonePadding = 40;
-  const totalOrbitCards = cardsPerRing.reduce((a, b) => a + b, 0); // 25
+  const totalOrbitCards = 25;
 
   // Calculate base ring radii based on container size
   const getBaseRingRadii = useCallback(() => {
@@ -113,27 +113,16 @@ export function OrbitCards({
     ];
   }, []);
 
-  // Apply breathing effect to radii - uses fixed time anchor
-  const getBreathingRadii = useCallback((currentBreathPhase: number) => {
-    const baseRadii = getBaseRingRadii();
-    if (!breathingEnabled) return baseRadii;
-    
-    return baseRadii.map((radius, index) => {
-      const phaseOffset = index * 0.3;
-      // Use the formula: baseRadius + (Math.sin(time * 0.5) * 150)
-      const breathOffset = Math.sin(currentBreathPhase + phaseOffset) * breathingAmplitude;
-      return radius + breathOffset;
-    });
-  }, [getBaseRingRadii, breathingEnabled, breathingAmplitude]);
+  // Calculate base speed with level scaling
+  const baseSpeed = useMemo(() => {
+    return 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
+  }, [level]);
 
   // Initialize orbit cards with 25 in orbit, rest in hidden deck
   const initializeCards = useCallback(() => {
     const newOrbitCards: OrbitCard[] = [];
     const newHiddenDeck: Card[] = [];
     let deckIndex = 0;
-
-    // Calculate base speed with level scaling
-    const baseSpeed = 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
 
     // Populate orbit rings
     for (let ring = 0; ring < totalRings; ring++) {
@@ -142,14 +131,15 @@ export function OrbitCards({
       
       for (let i = 0; i < numCards && deckIndex < deck.length; i++) {
         const card = deck[deckIndex++];
-        const angle = (i / numCards) * Math.PI * 2;
+        // baseAngle is the card's fixed slot position in the ring
+        const baseAngle = (i / numCards) * Math.PI * 2;
         newOrbitCards.push({
           ...card,
           ring,
-          angle,
+          baseAngle,
           speed: ringSpeed,
           isNew: false,
-          entryTimestamp: startTimeRef.current,
+          entryTime: 0,
         });
       }
     }
@@ -161,15 +151,16 @@ export function OrbitCards({
 
     setOrbitCards(newOrbitCards);
     setHiddenDeck(newHiddenDeck);
-    startTimeRef.current = performance.now();
-  }, [deck, level, cardsPerRing, ringMultipliers, totalRings]);
+    setGlobalTime(0);
+    lastTimeRef.current = 0;
+  }, [deck, baseSpeed, cardsPerRing, ringMultipliers, totalRings]);
 
   // Reset on deck change or reshuffle
   useEffect(() => {
     initializeCards();
   }, [deck.length, reshuffleTrigger, initializeCards]);
 
-  // Animation loop - uses fixed time anchor for stability
+  // Animation loop - updates global time for rotation and breathing
   useEffect(() => {
     if (isPaused) return;
 
@@ -181,20 +172,16 @@ export function OrbitCards({
       const deltaTime = (timestamp - lastTimeRef.current) / 1000;
       lastTimeRef.current = timestamp;
 
-      // Update card rotation angles - decoupled from selection state
+      // Update global time - this drives both rotation and breathing
+      setGlobalTime(prev => prev + deltaTime);
+
+      // Clear isNew flag after fly-in animation completes
       setOrbitCards(prev => 
         prev.map(card => ({
           ...card,
-          angle: card.angle + card.speed * deltaTime * 0.35,
-          // Clear isNew flag after entry animation completes (~500ms)
-          isNew: card.isNew && (timestamp - (card.entryTimestamp || 0)) < 500,
+          isNew: card.isNew && card.entryTime !== undefined && (timestamp / 1000 - card.entryTime) < 0.6,
         }))
       );
-
-      // Update breathing phase using fixed time reference
-      if (breathingEnabled) {
-        setBreathPhase(prev => prev + deltaTime * breathingSpeed);
-      }
 
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -206,7 +193,7 @@ export function OrbitCards({
         cancelAnimationFrame(rafRef.current);
       }
     };
-  }, [isPaused, breathingEnabled, breathingSpeed]);
+  }, [isPaused]);
 
   // Reset time ref when paused
   useEffect(() => {
@@ -220,35 +207,30 @@ export function OrbitCards({
     playCardHit();
     onSelectCard(card);
     
-    setOrbitCards(prev => {
-      const remaining = prev.filter(c => c.id !== card.id);
-      return remaining;
-    });
-
-    // Queue the played card to back of hidden deck and pull replacement
-    setHiddenDeck(prev => {
-      const newQueue = [...prev, card as Card];
-      return newQueue;
-    });
+    // Remove from orbit and add to back of hidden deck
+    setOrbitCards(prev => prev.filter(c => c.id !== card.id));
+    setHiddenDeck(prev => [...prev, card as Card]);
+    pendingReplenishRef.current = true;
   }, [onSelectCard, playCardHit]);
 
-  // Effect to replenish orbit from hidden deck
+  // Replenish orbit from hidden deck (debounced with ref to prevent infinite loop)
   useEffect(() => {
+    if (!pendingReplenishRef.current) return;
+    
     const missingCount = totalOrbitCards - orbitCards.length;
     
     if (missingCount > 0 && hiddenDeck.length > 0) {
+      pendingReplenishRef.current = false;
+      
       const cardsToAdd = hiddenDeck.slice(0, missingCount);
       const remainingHidden = hiddenDeck.slice(missingCount);
       
       if (cardsToAdd.length > 0) {
-        const baseSpeed = 1.05 * (1 + (level > 10 ? (level - 10) * 0.005 : 0));
-        const currentTime = performance.now();
-        
         // Find which ring needs cards
         const ringCounts = [0, 0, 0];
         orbitCards.forEach(c => ringCounts[c.ring]++);
         
-        const newCards: OrbitCard[] = cardsToAdd.map((card, idx) => {
+        const newCards: OrbitCard[] = cardsToAdd.map((card) => {
           // Find first ring that needs cards
           let targetRing = 0;
           for (let r = 0; r < totalRings; r++) {
@@ -261,33 +243,31 @@ export function OrbitCards({
           
           // Calculate entry angle - find a gap in the ring
           const ringCards = orbitCards.filter(c => c.ring === targetRing);
-          const existingAngles = ringCards.map(c => c.angle % (Math.PI * 2));
-          let entryAngle = Math.random() * Math.PI * 2;
+          const numCardsInRing = cardsPerRing[targetRing];
           
-          // Try to find a gap
-          if (existingAngles.length > 0) {
-            existingAngles.sort((a, b) => a - b);
-            let maxGap = 0;
-            let gapStart = 0;
-            for (let i = 0; i < existingAngles.length; i++) {
-              const next = existingAngles[(i + 1) % existingAngles.length];
-              const curr = existingAngles[i];
-              const gap = next > curr ? next - curr : (Math.PI * 2 - curr + next);
-              if (gap > maxGap) {
-                maxGap = gap;
-                gapStart = curr;
-              }
+          // Find the missing slot index
+          const existingSlots = new Set(ringCards.map(c => {
+            // Calculate which slot this card occupies based on its baseAngle
+            return Math.round((c.baseAngle / (Math.PI * 2)) * numCardsInRing) % numCardsInRing;
+          }));
+          
+          let entrySlot = 0;
+          for (let i = 0; i < numCardsInRing; i++) {
+            if (!existingSlots.has(i)) {
+              entrySlot = i;
+              break;
             }
-            entryAngle = gapStart + maxGap / 2;
           }
+          
+          const entryBaseAngle = (entrySlot / numCardsInRing) * Math.PI * 2;
           
           return {
             ...card,
             ring: targetRing,
-            angle: entryAngle,
+            baseAngle: entryBaseAngle,
             speed: baseSpeed * ringMultipliers[targetRing],
             isNew: true,
-            entryTimestamp: currentTime,
+            entryTime: globalTime,
           };
         });
         
@@ -295,18 +275,35 @@ export function OrbitCards({
         setHiddenDeck(remainingHidden);
       }
     }
-  }, [orbitCards.length, hiddenDeck, totalOrbitCards, level, cardsPerRing, ringMultipliers, totalRings, orbitCards]);
+  }, [orbitCards.length, hiddenDeck.length, totalOrbitCards, baseSpeed, cardsPerRing, ringMultipliers, totalRings, globalTime, orbitCards, hiddenDeck]);
 
-  const ringRadii = useMemo(() => getBreathingRadii(breathPhase), [getBreathingRadii, breathPhase]);
+  // Calculate breathing radii based on global time
+  const ringRadii = useMemo(() => {
+    const baseRadii = getBaseRingRadii();
+    if (!breathingEnabled) return baseRadii;
+    
+    // Formula: baseRadius + (Math.sin(time * breathingSpeed) * amplitude)
+    return baseRadii.map((radius, index) => {
+      const phaseOffset = index * 0.3;
+      const breathOffset = Math.sin(globalTime * breathingSpeed + phaseOffset) * breathingAmplitude;
+      return radius + breathOffset;
+    });
+  }, [getBaseRingRadii, breathingEnabled, globalTime, breathingSpeed, breathingAmplitude]);
+
   const baseRadii = useMemo(() => getBaseRingRadii(), [getBaseRingRadii]);
 
-  // Calculate card positions with breathing radii
+  // Calculate card position using angle + radius formula
+  // angle = baseAngle + (time * speedMultiplier)
+  // radius = baseRadius + (Math.sin(time * 0.5) * amplitude)
+  // x = cos(angle) * radius; y = sin(angle) * radius
   const getCardPosition = useCallback((card: OrbitCard) => {
     const radius = ringRadii[card.ring] || ringRadii[0];
-    const x = Math.cos(card.angle) * radius;
-    const y = Math.sin(card.angle) * radius;
+    // Rotation: angle = baseAngle + (globalTime * speed * 0.35)
+    const angle = card.baseAngle + (globalTime * card.speed * 0.35);
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
     return { x, y };
-  }, [ringRadii]);
+  }, [ringRadii, globalTime]);
 
   return (
     <div
@@ -324,11 +321,10 @@ export function OrbitCards({
           <motion.div
             key={index}
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10 pointer-events-none"
-            animate={{
+            style={{
               width: radius * 2,
               height: radius * 2,
             }}
-            transition={{ duration: 0.05 }}
           />
         ))}
 
