@@ -15,7 +15,7 @@ interface FallingCardsProps {
   reshuffleTrigger?: number;
 }
 
-type LocalFallingCard = FallingCard & { instanceKey: string };
+type LocalFallingCard = FallingCard & { instanceKey: string; isTouched?: boolean };
 
 export function FallingCards({
   deck,
@@ -35,7 +35,7 @@ export function FallingCards({
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
   
-  // 20% larger hitbox on mobile
+  // 20% larger hitbox on mobile - applied to pointerdown event area
   const hitboxPadding = isMobile ? 'p-6 -m-6' : 'p-4 -m-4';
 
   // Track which cards have already been spawned (by card id) so we don't re-spawn them
@@ -180,17 +180,33 @@ export function FallingCards({
     };
   }, [isPaused, speed, selectedCardIds, createSpawn, isRecycling, deck.length]);
 
-  const handleCardClick = useCallback(
-    (card: LocalFallingCard) => {
-      setFallingCards((prev) => prev.filter((c) => c.instanceKey !== card.instanceKey));
+  // Use pointerdown for instant response (bypasses mobile tap delay)
+  const handleCardPointerDown = useCallback(
+    (card: LocalFallingCard, e: React.PointerEvent) => {
+      e.preventDefault(); // Prevent any default behavior
+      e.stopPropagation();
+      
+      // Immediate visual feedback - mark as touched before removing
+      setFallingCards((prev) => 
+        prev.map((c) => 
+          c.instanceKey === card.instanceKey ? { ...c, isTouched: true } : c
+        )
+      );
+      
+      // Play sound and select immediately
       playSound('cardSelect');
       onSelectCard(card);
+      
+      // Remove card after brief touch feedback
+      requestAnimationFrame(() => {
+        setFallingCards((prev) => prev.filter((c) => c.instanceKey !== card.instanceKey));
+      });
     },
     [onSelectCard, playSound]
   );
 
   return (
-    <div ref={containerRef} className="absolute inset-0 overflow-hidden">
+    <div ref={containerRef} className="absolute inset-0 overflow-hidden touch-none">
       <AnimatePresence>
         {fallingCards.map((card) => (
           <motion.div
@@ -198,12 +214,13 @@ export function FallingCards({
             initial={{ opacity: 0, scale: 0.9, rotate: card.rotation }}
             animate={{ 
               opacity: 1, 
-              scale: 1, 
+              scale: card.isTouched ? 1.15 : 1, 
               rotate: card.rotation,
             }}
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ 
               duration: 0.12,
+              scale: { duration: 0.08 }, // Fast pulse on touch
               rotate: { duration: 0.1, ease: "linear" }
             }}
             style={{
@@ -214,18 +231,21 @@ export function FallingCards({
             }}
             className="z-10"
           >
-            {/* Larger invisible hit zone for easier clicking - 20% larger on mobile */}
-            <button
-              onClick={() => handleCardClick(card)}
-              className={`relative cursor-pointer ${hitboxPadding} focus:outline-none`}
+            {/* Larger hit zone with pointerdown for instant mobile response */}
+            <div
+              onPointerDown={(e) => handleCardPointerDown(card, e)}
+              className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}
+              role="button"
               aria-label={`Select ${card.rank} of ${card.suit}`}
             >
-              <PlayingCard
-                card={card}
-                size="md"
-                animate={false}
-              />
-            </button>
+              <div className={`transition-all duration-75 ${card.isTouched ? 'ring-4 ring-primary ring-opacity-80 rounded-lg shadow-lg shadow-primary/50' : ''}`}>
+                <PlayingCard
+                  card={card}
+                  size="md"
+                  animate={false}
+                />
+              </div>
+            </div>
           </motion.div>
         ))}
       </AnimatePresence>
