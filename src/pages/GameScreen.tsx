@@ -14,6 +14,7 @@ import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { PowerUpSelection } from '@/components/game/PowerUpSelection';
 import { BonusRound } from '@/components/game/BonusRound';
 import { LevelCompleteModal } from '@/components/game/LevelCompleteModal';
+import { LootBoxReveal } from '@/components/game/LootBoxReveal';
 
 import { GameMode } from '@/types/game';
 import { getSSCSpeed } from '@/lib/pokerEngine';
@@ -39,6 +40,9 @@ export default function GameScreen() {
     nextLevel,
     startBonusRound,
     markExplainerSeen,
+    claimReward,
+    swapPowerUp,
+    discardReward,
   } = useGameState();
   const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
   const isMobile = useIsMobile();
@@ -441,9 +445,21 @@ export default function GameScreen() {
           </div>
         )}
 
+        {/* Loot Box Reveal (for bonus round rewards) */}
+        <LootBoxReveal
+          isOpen={state.showLootBox && state.isBonusLevel}
+          powerUpId={state.pendingReward}
+          tier={state.rewardTier}
+          inventoryFull={state.inventoryFull}
+          currentPowerUps={state.earnedPowerUps}
+          onClaim={claimReward}
+          onSwap={swapPowerUp}
+          onDiscard={discardReward}
+        />
+
         {/* Level Complete Modal */}
         <LevelCompleteModal
-          isOpen={state.isLevelComplete && !state.showPowerUpSelection}
+          isOpen={state.isLevelComplete && !state.showPowerUpSelection && !state.showLootBox}
           level={state.sscLevel}
           score={state.score}
           levelScore={state.levelScore}
