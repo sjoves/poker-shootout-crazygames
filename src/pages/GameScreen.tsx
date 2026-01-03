@@ -13,7 +13,7 @@ import { PowerUpBar } from '@/components/game/PowerUpBar';
 import { PowerUpSelection } from '@/components/game/PowerUpSelection';
 import { BonusRound } from '@/components/game/BonusRound';
 import { LevelCompleteModal } from '@/components/game/LevelCompleteModal';
-import { SSCExplainer } from '@/components/game/SSCExplainer';
+
 import { GameMode } from '@/types/game';
 import { getSSCSpeed } from '@/lib/pokerEngine';
 import { BoltIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
@@ -44,7 +44,7 @@ export default function GameScreen() {
   const isSSC = state.mode === 'ssc';
   const baseSpeed = isMobile ? 0.6 : 1;
   const sscSpeed = isSSC ? getSSCSpeed(state.sscLevel) : 1;
-  const [showSSCExplainer, setShowSSCExplainer] = useState(false);
+  
   const [isMuted, setIsMuted] = useState(false);
   const [showUsedCards, setShowUsedCards] = useState(false);
   const [bonusIntroActive, setBonusIntroActive] = useState(false);
@@ -84,19 +84,10 @@ export default function GameScreen() {
     };
   }, [mode, isTestBonus, startLevel, startMusic, stopMusic]);
 
-  // Show SSC explainer for first-time SSC players
-  useEffect(() => {
-    if (introPhase === 'ready' && mode === 'ssc' && !state.hasSeenSSCExplainer && !showSSCExplainer) {
-      setShowSSCExplainer(true);
-    }
-  }, [introPhase, mode, state.hasSeenSSCExplainer, showSSCExplainer]);
 
   // Intro sequence: Ready -> Begin -> Playing
   useEffect(() => {
     if (introPhase === 'loading' || isLoadingMusic) return;
-    
-    // Don't proceed if SSC explainer is showing
-    if (showSSCExplainer) return;
     
     if (introPhase === 'ready') {
       const timer = setTimeout(() => setIntroPhase('begin'), 1200);
@@ -115,7 +106,7 @@ export default function GameScreen() {
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic, showSSCExplainer]);
+  }, [introPhase, isTestBonus, mode, startLevel, startGame, isLoadingMusic]);
 
   // Play sound when hand is submitted
   useEffect(() => {
@@ -165,12 +156,6 @@ export default function GameScreen() {
     }
   }, [state.isGameOver, state.mode, playSound]);
 
-  // Handle SSC explainer close - proceed to countdown
-  const handleExplainerClose = useCallback(() => {
-    setShowSSCExplainer(false);
-    markExplainerSeen();
-    // The intro sequence will now proceed since showSSCExplainer is false
-  }, [markExplainerSeen]);
 
   // Activate bonus intro when entering bonus round - pause timer during intro
   useEffect(() => {
@@ -452,8 +437,6 @@ export default function GameScreen() {
           onStartBonusRound={startBonusRound}
         />
 
-        {/* SSC Explainer */}
-        <SSCExplainer isOpen={showSSCExplainer} onClose={handleExplainerClose} />
       </div>
     </div>
   );
