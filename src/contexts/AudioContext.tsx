@@ -248,7 +248,7 @@ class BackgroundMusic {
       // Load the audio buffer if not already loaded
       if (!this.audioBuffer) {
         console.log('Loading background music audio buffer...');
-        this.audioBuffer = await loadAudioBuffer(this.audioCtx, '/sounds/background-music.wav');
+        this.audioBuffer = await loadAudioBuffer(this.audioCtx, '/sounds/background-music.mp3');
         console.log('Audio buffer loaded, duration:', this.audioBuffer.duration);
       }
       
