@@ -43,6 +43,7 @@ export default function GameScreen() {
     claimReward,
     swapPowerUp,
     discardReward,
+    getHandResults,
   } = useGameState();
   const { playSound, startMusic, stopMusic, isMusicLoading } = useAudio();
   const isMobile = useIsMobile();
@@ -224,7 +225,8 @@ export default function GameScreen() {
   const progress = getProgressInfo();
 
   if (state.isGameOver) {
-    navigate('/game-over', { state: { gameState: state } });
+    const handHistory = getHandResults();
+    navigate('/game-over', { state: { gameState: state, handHistory } });
   }
 
   const selectedIds = state.selectedCards.map(c => c.id);
