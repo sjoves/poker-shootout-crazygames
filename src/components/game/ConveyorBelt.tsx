@@ -60,9 +60,9 @@ export function ConveyorBelt({
     }
   }, [reshuffleTrigger, triggerRender]);
 
-  // Initialize cards on tracks
+  // Initialize cards on tracks - only when deck has cards
   useEffect(() => {
-    if (initializedRef.current || !containerRef.current) return;
+    if (initializedRef.current || !containerRef.current || deck.length === 0) return;
     initializedRef.current = true;
     
     const containerWidth = containerRef.current.offsetWidth;
