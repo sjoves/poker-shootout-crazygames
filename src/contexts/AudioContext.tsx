@@ -132,8 +132,8 @@ function playLevelComplete(audioCtx: AudioContext, volume: number): void {
 }
 
 function playGameOver(audioCtx: AudioContext, volume: number): void {
-  // Play the game-over.wav sound file
-  loadAudioBuffer(audioCtx, '/sounds/game-over.wav').then((buffer) => {
+  // Play the game-over.mp3 sound file
+  loadAudioBuffer(audioCtx, '/sounds/game-over.mp3').then((buffer) => {
     const source = audioCtx.createBufferSource();
     const gainNode = audioCtx.createGain();
     
