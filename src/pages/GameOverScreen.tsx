@@ -2,27 +2,97 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { GameState } from '@/types/game';
+import { GameState, HandResult } from '@/types/game';
 import { Crown, Play, Award, Clapperboard, Home, RotateCcw, CloudUpload, CheckCircle } from 'lucide-react';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
+import { useRetention } from '@/hooks/useRetention';
 import { RewardedAd, useRewardedAd } from '@/components/ads/RewardedAd';
 import { supabase } from '@/integrations/supabase/client';
 import { useGuestScores } from '@/hooks/useGuestScores';
 import { AuthModal } from '@/components/auth/AuthModal';
 
+// Map hand names from evaluateHand to the keys expected by updateStats
+function mapHandTypesToStats(handHistory: HandResult[]): Record<string, number> {
+  const stats: Record<string, number> = {};
+  
+  for (const result of handHistory) {
+    const handName = result.hand.name.toLowerCase().replace(/\s+/g, '');
+    
+    // Map to the expected keys
+    switch (handName) {
+      case 'flush':
+        stats.flush = (stats.flush || 0) + 1;
+        break;
+      case 'straight':
+        stats.straight = (stats.straight || 0) + 1;
+        break;
+      case 'fullhouse':
+        stats.fullHouse = (stats.fullHouse || 0) + 1;
+        break;
+      case 'fourofakind':
+        stats.fourOfAKind = (stats.fourOfAKind || 0) + 1;
+        break;
+      case 'straightflush':
+        stats.straightFlush = (stats.straightFlush || 0) + 1;
+        break;
+      case 'royalflush':
+        stats.royalFlush = (stats.royalFlush || 0) + 1;
+        break;
+    }
+  }
+  
+  return stats;
+}
+
 export default function GameOverScreen() {
   const location = useLocation();
   const navigate = useNavigate();
   const gameState = location.state?.gameState as GameState | undefined;
+  const handHistory = location.state?.handHistory as HandResult[] | undefined;
   const { user, loading: authLoading } = useAuth();
   const { isPremium, openCheckout } = useSubscription();
+  const { updateStats, updateStreak } = useRetention();
   const rewardedAd = useRewardedAd();
   const { saveGuestScore } = useGuestScores();
   const scoreSavedRef = useRef(false);
+  const statsUpdatedRef = useRef(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [scoreSynced, setScoreSynced] = useState(false);
   const [personalBest, setPersonalBest] = useState<number | null>(null);
+
+  // Update retention stats (challenges, achievements, streak) when game ends
+  useEffect(() => {
+    const updateRetentionStats = async () => {
+      if (!gameState || !user || statsUpdatedRef.current) return;
+      
+      statsUpdatedRef.current = true;
+      
+      try {
+        // Update streak
+        await updateStreak();
+        
+        // Map hand history to stats format
+        const handTypes = handHistory ? mapHandTypesToStats(handHistory) : {};
+        
+        // Use cumulative score for SSC, regular score for other modes
+        const scoreToUse = gameState.mode === 'ssc' ? gameState.cumulativeScore : gameState.score;
+        
+        // Update stats and check achievements/challenges
+        await updateStats({
+          score: scoreToUse,
+          handsPlayed: gameState.handsPlayed,
+          handTypes,
+        });
+        
+        console.log('Retention stats updated:', { score: scoreToUse, handsPlayed: gameState.handsPlayed, handTypes });
+      } catch (error) {
+        console.error('Error updating retention stats:', error);
+      }
+    };
+    
+    updateRetentionStats();
+  }, [gameState, handHistory, user, updateStats, updateStreak]);
 
   // Save score to leaderboard when component mounts
   useEffect(() => {
