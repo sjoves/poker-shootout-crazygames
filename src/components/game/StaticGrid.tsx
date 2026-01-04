@@ -20,18 +20,22 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
-  // Use 'ssc' size (20% larger than sm) for SSC Static mode
-  const cardSize = isMobile ? 'sm' : 'ssc';
+  // Use 'sd' size (5% larger than ssc) for Sitting Duck mode
+  const cardSize = isMobile ? 'sm' : 'sd';
   
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="absolute inset-0 flex items-center justify-center pt-20 pb-36"
+      className="absolute inset-0 flex items-center justify-center"
+      style={{ paddingTop: '5rem', paddingBottom: '9rem' }}
     >
       <div 
-        className="grid gap-1 sm:gap-2 p-2 sm:p-4"
-        style={{ gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))` }}
+        className="grid p-2 sm:p-4"
+        style={{ 
+          gridTemplateColumns: `repeat(${GRID_COLUMNS}, minmax(0, 1fr))`,
+          gap: isMobile ? '0.3rem' : '0.55rem' // 2% increased spacing
+        }}
       >
         {visibleCards.map((card, index) => {
           const isSelected = selectedCardIds.includes(card.id);
