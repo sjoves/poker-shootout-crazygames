@@ -128,9 +128,6 @@ export default function SplashScreen() {
         className="text-center mb-6"
       >
         <img src={currentLogo} alt="Poker Shootout" className="w-[22rem] md:w-[26.4rem] mx-auto mb-4" />
-        <p className="text-lg text-muted-foreground">
-          Collect cards. Build hands. Beat the clock.
-        </p>
         {isPremium && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
