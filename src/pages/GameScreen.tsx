@@ -226,6 +226,7 @@ export default function GameScreen() {
 
   if (state.isGameOver) {
     const handHistory = getHandResults();
+    console.log('[GameScreen] Navigating to game-over with handHistory:', handHistory?.length, 'hands', handHistory?.map(h => h.hand.name));
     navigate('/game-over', { state: { gameState: state, handHistory } });
   }
 
