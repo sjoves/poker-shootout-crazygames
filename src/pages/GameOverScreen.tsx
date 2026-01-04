@@ -68,6 +68,8 @@ export default function GameOverScreen() {
 
   // Update retention stats (challenges, achievements, streak) when game ends
   useEffect(() => {
+    console.log('[GameOverScreen] Received handHistory:', handHistory?.length, 'hands', handHistory?.map(h => h?.hand?.name));
+    
     const updateRetentionStats = async () => {
       if (!gameState || !user || statsUpdatedRef.current) return;
       
