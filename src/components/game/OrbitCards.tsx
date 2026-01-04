@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-
+import useSound from 'use-sound';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 
@@ -96,7 +96,7 @@ export function OrbitCards({
   const containerRef = useRef<HTMLDivElement>(null);
   const safeZonePadding = 40;
 
-  // Card hit sound removed
+  const [playCardHit] = useSound('/sounds/card-hit.mp3', { volume: 0.3 });
 
   // Ring config: Inner 5, Middle 8, Outer 12 = 25
   const cardsPerRing = useMemo(() => [5, 8, 12] as const, []);
@@ -229,6 +229,7 @@ export function OrbitCards({
 
   const handleCardClick = useCallback(
     (slot: OrbitSlot) => {
+      playCardHit();
       onSelectCard(slot.card);
 
       setSlots(prev => {
@@ -273,7 +274,7 @@ export function OrbitCards({
         return deduped;
       });
     },
-    [onSelectCard, selectedCardIds]
+    [onSelectCard, playCardHit, selectedCardIds]
   );
 
   // Clear isNew flag after animation
