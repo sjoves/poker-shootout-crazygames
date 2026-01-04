@@ -148,10 +148,12 @@ export function FallingCards({
     [deck, selectedCardIds, effectiveSpeed]
   );
 
-  // Seed first card
+  // Seed first card - only when deck is populated
   useEffect(() => {
-    if (isPaused || deck.length === 0) return;
+    if (isPaused) return;
+    if (deck.length === 0) return;
     if (cardsRef.current.length > 0) return;
+    if (shuffledDeckRef.current.length === 0) return; // Wait for deck to be shuffled
 
     const measuredWidth = containerRef.current?.offsetWidth ?? 0;
     const effectiveWidth = measuredWidth > 0 ? measuredWidth : 480;
