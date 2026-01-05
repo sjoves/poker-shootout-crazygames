@@ -42,9 +42,8 @@ export function ConveyorBelt({
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
 
-  // Busy flag to prevent multi-touch / ghost taps
-  const busyUntilRef = useRef<number>(0);
-  const BUSY_MS = 300;
+  // Atomic lock to prevent multi-touch / ghost taps (no time-based gating)
+  const isSelectingRef = useRef(false);
 
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
@@ -261,63 +260,67 @@ export function ConveyorBelt({
   }, [isPaused, cardsReady, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
 
   const handleCardPointerDown = useCallback((card: ConveyorCard, e: React.PointerEvent) => {
-    // Global hand guard: never visually "kill" a card if the hand is already full
-    if (selectedCardIds.length >= 5) {
+    // Atomic lock - reject if already processing
+    if (isSelectingRef.current) {
       e.preventDefault();
       e.stopPropagation();
       return;
     }
+    isSelectingRef.current = true;
 
-    // Prevent ghost taps: block if busy
-    const now = performance.now();
-    if (now < busyUntilRef.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-
-    const baseId = card.id.split('-row')[0];
-    if (selectedCardIds.includes(baseId)) {
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-
-    // Set busy flag immediately
-    busyUntilRef.current = now + BUSY_MS;
-
-    // Stop all event propagation first
-    e.stopPropagation();
-    (e.nativeEvent as any)?.stopImmediatePropagation?.();
-
-    // Instant visual removal (opacity: 0 for hardware-accelerated hide)
-    const el = e.currentTarget as HTMLElement;
-    el.style.opacity = '0';
-    el.style.pointerEvents = 'none';
-
-    // Remove from active list in the same frame
-    cardsRef.current = cardsRef.current.filter((c) => c.id !== card.id);
-    cardElementsRef.current.delete(card.id);
-    triggerRender();
-
-    // Pointer capture to prevent multi-target / ghost interactions
     try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      // ignore
+      // Global hand guard: never visually "kill" a card if the hand is already full
+      if (selectedCardIds.length >= 5) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      const baseId = card.id.split('-row')[0];
+      if (selectedCardIds.includes(baseId)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+
+      // Stop all event propagation first
+      e.stopPropagation();
+      (e.nativeEvent as any)?.stopImmediatePropagation?.();
+
+      // Instant visual removal (opacity: 0 for hardware-accelerated hide)
+      const el = e.currentTarget as HTMLElement;
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
+
+      // Remove from active list in the same frame
+      cardsRef.current = cardsRef.current.filter((c) => c.id !== card.id);
+      cardElementsRef.current.delete(card.id);
+      triggerRender();
+
+      // Pointer capture to prevent multi-target / ghost interactions
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+
+      const originalCard: Card = {
+        id: baseId,
+        suit: card.suit,
+        rank: card.rank,
+        value: card.value,
+      };
+      playSound('cardSelect');
+      onSelectCard(originalCard);
+
+      // No Ghost Taps: prevent click synthesis after pointerdown
+      e.preventDefault();
+    } finally {
+      // Release lock in next microtask
+      queueMicrotask(() => {
+        isSelectingRef.current = false;
+      });
     }
-
-    const originalCard: Card = {
-      id: baseId,
-      suit: card.suit,
-      rank: card.rank,
-      value: card.value,
-    };
-    playSound('cardSelect');
-    onSelectCard(originalCard);
-
-    // No Ghost Taps: prevent click synthesis after pointerdown
-    e.preventDefault();
   }, [onSelectCard, playSound, selectedCardIds, triggerRender]);
 
   const rowHeight = 120;
