@@ -105,6 +105,9 @@ export const useGameStore = create<GameStore>()(
       const state = get();
       const now = Date.now();
 
+      // Ghost-event dedupe: discard selections that arrive too quickly
+      if (state.lastProcessedTimestamp && now - state.lastProcessedTimestamp < 50) return;
+
       // Safety check: if hand is incomplete but lock is stuck, force unlock
       if (state.isSelectionLocked && state.selectedCards.length < 5) {
         const lockAge = state.lastHandLengthChangeAt ? now - state.lastHandLengthChangeAt : 0;
@@ -125,6 +128,7 @@ export const useGameStore = create<GameStore>()(
         isSelectionLocked: true,
         isProcessingSelection: true,
         lastHandLengthChangeAt: now,
+        lastProcessedTimestamp: now,
       });
 
       // --- selection logic ---

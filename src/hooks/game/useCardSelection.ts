@@ -27,6 +27,9 @@ export function useCardSelection(
       }
 
       setState((prev) => {
+        // Ghost-event dedupe: discard events that arrive too quickly
+        if (prev.lastProcessedTimestamp && now - prev.lastProcessedTimestamp < 50) return prev;
+
         // Hard cap: if hand is full, never allow another card (also clears stale locks)
         if (prev.selectedCards.length >= 5) {
           return prev.isSelectionLocked || prev.isProcessingSelection
@@ -55,6 +58,7 @@ export function useCardSelection(
           isSelectionLocked: true,
           isProcessingSelection: true,
           lastHandLengthChangeAt: now,
+          lastProcessedTimestamp: now,
         };
 
         // Duplicate card? Keep lock (released by timeout) but don't mutate hand.

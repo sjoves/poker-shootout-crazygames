@@ -62,6 +62,8 @@ export interface GameState {
   // Legacy/diagnostic guards (kept for compatibility)
   isProcessingSelection: boolean;
   lastHandLengthChangeAt: number | null;
+  // Ghost-event dedupe (timestamp of last accepted selection)
+  lastProcessedTimestamp: number | null;
   selectedCards: Card[];
   deck: Card[];
   usedCards: Card[];
