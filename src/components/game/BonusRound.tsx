@@ -239,10 +239,10 @@ export function BonusRound({
       {/* Cards Grid */}
       <div className="flex-1 flex items-center justify-center overflow-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div 
-          className="grid w-full max-w-2xl lg:max-w-3xl mx-auto"
+          className="grid w-full max-w-2xl lg:max-w-3xl mx-auto justify-center"
           style={{
-            gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`,
-            gap: isMobile ? '0.25rem' : '0.5rem',
+            gridTemplateColumns: `repeat(${gridCols}, auto)`,
+            gap: isMobile ? '0.5rem' : '0.75rem',
           }}
         >
           {deck.slice(0, cardCount).map((card) => (
