@@ -30,8 +30,9 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Module-level global pick lock (synchronous guard across all card instances)
-let globalPickLock = false;
+// Module-level global pick lock (prevents a single tap from selecting multiple cards)
+const PICK_LOCK_MS = 250;
+let globalPickLockUntil = 0;
 
 export function FallingCards({
   deck,
@@ -51,6 +52,7 @@ export function FallingCards({
   const cardElementsRef = useRef<Map<string, HTMLDivElement>>(new Map());
   const pickedInstanceKeysRef = useRef<Set<string>>(new Set());
   const selectedCountRef = useRef<number>(selectedCardIds.length);
+  const activePointerIdRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>();
   const lastSpawnRef = useRef<number>(0);
@@ -81,7 +83,7 @@ export function FallingCards({
     cardsRef.current = [];
     cardElementsRef.current.clear();
     pickedInstanceKeysRef.current.clear();
-    globalPickLock = false;
+    globalPickLockUntil = 0;
     triggerRender();
   }, [reshuffleTrigger, reshuffleDeck, triggerRender]);
 
@@ -92,7 +94,7 @@ export function FallingCards({
       cardsRef.current = [];
       cardElementsRef.current.clear();
       pickedInstanceKeysRef.current.clear();
-      globalPickLock = false;
+      globalPickLockUntil = 0;
       triggerRender();
     }
   }, [deck.length, reshuffleDeck, triggerRender]);
@@ -244,17 +246,35 @@ export function FallingCards({
 
   const handleCardPointerDown = useCallback(
     (card: LocalFallingCard, e: React.PointerEvent) => {
+      // Ensure one selection per press (some browsers can retarget quickly when elements move)
+      if (activePointerIdRef.current !== null) return;
+      activePointerIdRef.current = e.pointerId;
+
+      const releasePointer = () => {
+        activePointerIdRef.current = null;
+      };
+      window.addEventListener('pointerup', releasePointer, { once: true });
+      window.addEventListener('pointercancel', releasePointer, { once: true });
+
+      // Capture the pointer so other cards can't receive events for this press
+      try {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      } catch {
+        // ignore
+      }
+
       // Synchronous per-instance guard (works even if multiple events fire before React re-renders)
       if (pickedInstanceKeysRef.current.has(card.instanceKey)) return;
 
       // Global guard: prevents a single tap from selecting multiple overlapping cards
-      if (globalPickLock) return;
+      const tNow = performance.now();
+      if (tNow < globalPickLockUntil) return;
 
       // Hard cap (use ref to avoid stale prop in same-tick multi-dispatch)
       if (selectedCountRef.current >= 5) return;
 
       // Lock immediately
-      globalPickLock = true;
+      globalPickLockUntil = tNow + PICK_LOCK_MS;
       pickedInstanceKeysRef.current.add(card.instanceKey);
 
       // Pointer event termination (avoid ghost double-trigger / bubbling)
@@ -280,7 +300,7 @@ export function FallingCards({
           id: card.id,
           pointerId: e.pointerId,
           selectedCount: selectedCountRef.current,
-          t: performance.now(),
+          t: tNow,
         });
       }
 
@@ -294,11 +314,6 @@ export function FallingCards({
       cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== card.instanceKey);
       cardElementsRef.current.delete(card.instanceKey);
       triggerRender();
-
-      // Release global lock next frame (prevents same-tap multi-select, allows next tap quickly)
-      requestAnimationFrame(() => {
-        globalPickLock = false;
-      });
     },
     [onSelectCard, playSound, triggerRender]
   );
@@ -329,7 +344,7 @@ export function FallingCards({
 
           {/* Strict hitbox: 10% smaller than the visual card (5% inset per side) */}
           <div
-            onPointerDownCapture={(e) => handleCardPointerDown(card, e)}
+            onPointerDown={(e) => handleCardPointerDown(card, e)}
             style={{
               position: 'absolute',
               inset: '5%',
