@@ -16,6 +16,7 @@ export const INITIAL_GAME_STATE: GameState = {
   isSelectionLocked: false,
   isProcessingSelection: false,
   lastHandLengthChangeAt: null,
+  lastProcessedTimestamp: null,
   selectedCards: [],
   deck: [],
   usedCards: [],

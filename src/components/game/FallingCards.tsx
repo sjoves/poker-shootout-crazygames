@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef, useState } from "react";
 import type { Card, FallingCard } from "@/types/game";
 import { PlayingCard } from "./PlayingCard";
 import { useAudio } from "@/contexts/AudioContext";
-import { useIsMobile } from "@/hooks/use-mobile";
+
 
 interface FallingCardsProps {
   deck: Card[];
@@ -56,7 +56,6 @@ export function FallingCards({
   const lastSpawnRef = useRef<number>(0);
   const spawnCountRef = useRef<number>(0);
   const { playSound } = useAudio();
-  const isMobile = useIsMobile();
 
   useEffect(() => {
     selectedCountRef.current = selectedCardIds.length;
@@ -65,9 +64,6 @@ export function FallingCards({
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
-  
-  // Smaller hitbox: no negative margins to prevent overlap
-  const hitboxPadding = isMobile ? 'p-2' : 'p-1';
   
   // Exhaustive deck system: shuffled queue of cards to deal
   const shuffledDeckRef = useRef<Card[]>([]);
@@ -326,20 +322,23 @@ export function FallingCards({
             transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
             willChange: "transform",
           }}
-          className="z-10"
+          className="z-10 relative"
         >
+          {/* Visual card (never receives pointer events) */}
+          <PlayingCard card={card} size="md" animate={false} className="pointer-events-none" />
+
+          {/* Strict hitbox: 10% smaller than the visual card (5% inset per side) */}
           <div
-            onPointerDown={(e) => handleCardPointerDown(card, e)}
-            className={`relative cursor-pointer ${hitboxPadding} select-none touch-none`}
+            onPointerDownCapture={(e) => handleCardPointerDown(card, e)}
+            style={{
+              position: 'absolute',
+              inset: '5%',
+              borderRadius: 12,
+            }}
+            className="cursor-pointer touch-none"
             role="button"
             aria-label={`Select ${card.rank} of ${card.suit}`}
-          >
-            <div
-              className={`transition-all duration-75 ${card.isTouched ? 'ring-4 ring-primary ring-opacity-80 rounded-lg shadow-lg shadow-primary/50' : ''}`}
-            >
-              <PlayingCard card={card} size="md" animate={false} />
-            </div>
-          </div>
+          />
         </div>
       ))}
     </div>
