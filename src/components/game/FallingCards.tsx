@@ -30,6 +30,9 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
   return shuffled;
 }
 
+// Module-level global pick lock (synchronous guard across all card instances)
+let globalPickLock = false;
+
 export function FallingCards({
   deck,
   selectedCards,
@@ -57,7 +60,8 @@ export function FallingCards({
   const [, setRenderTrigger] = useState(0);
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
   
-  const hitboxPadding = isMobile ? 'p-6 -m-6' : 'p-4 -m-4';
+  // Smaller hitbox: no negative margins to prevent overlap
+  const hitboxPadding = isMobile ? 'p-2' : 'p-1';
   
   // Exhaustive deck system: shuffled queue of cards to deal
   const shuffledDeckRef = useRef<Card[]>([]);
@@ -236,12 +240,21 @@ export function FallingCards({
     const [isAlreadyPicked, setIsAlreadyPicked] = useState(false);
 
     const handlePointerDown = (e: React.PointerEvent) => {
-      if (isAlreadyPicked) return;
+      // Synchronous global lock (prevents multi-card pick from overlapping hitboxes)
+      if (globalPickLock) return;
+      globalPickLock = true;
+
+      // Per-card React state lock
+      if (isAlreadyPicked) {
+        globalPickLock = false;
+        return;
+      }
       setIsAlreadyPicked(true);
 
-      // Hand capacity hard-stop (prevents 6th-card bug)
-      if (selectedCards.length >= 5) {
+      // Hand capacity hard-stop using selectedCardIds (more reliable than selectedCards)
+      if (selectedCardIds.length >= 5) {
         setIsAlreadyPicked(false);
+        globalPickLock = false;
         return;
       }
 
@@ -277,6 +290,11 @@ export function FallingCards({
       cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== card.instanceKey);
       cardElementsRef.current.delete(card.instanceKey);
       triggerRender();
+
+      // Release global lock after a short delay (allow animation to settle)
+      setTimeout(() => {
+        globalPickLock = false;
+      }, 100);
     };
 
     return (
