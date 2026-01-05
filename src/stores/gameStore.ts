@@ -85,6 +85,8 @@ const STORE_INITIAL_STATE: GameState = {
 // Selection unlock timer (Zustand store variant)
 let selectionUnlockTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Consolidated strict sequential lock (synchronous gate across all pick sources)
+let lastPickTime = 0;
 // Safety watchdog: ensures lock never stays on for more than 500ms
 const scheduleUnlock = (set: (partial: Partial<GameState>) => void) => {
   if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
@@ -102,11 +104,12 @@ export const useGameStore = create<GameStore>()(
     // ATOMIC CARD SELECTION - Only updates selectedCards and deck
     // ========================================================================
     selectCard: (card: Card) => {
-      const state = get();
-      const now = Date.now();
+      // Global synchronous gate (must be first)
+      const t = Date.now();
+      if (t - lastPickTime < 400 || get().selectedCards.length >= 5) return;
 
-      // Ghost-event dedupe: discard selections that arrive too quickly
-      if (state.lastProcessedTimestamp && now - state.lastProcessedTimestamp < 50) return;
+      const state = get();
+      const now = t;
 
       // Safety check: if hand is incomplete but lock is stuck, force unlock
       if (state.isSelectionLocked && state.selectedCards.length < 5) {
@@ -128,11 +131,13 @@ export const useGameStore = create<GameStore>()(
         isSelectionLocked: true,
         isProcessingSelection: true,
         lastHandLengthChangeAt: now,
-        lastProcessedTimestamp: now,
       });
 
       // --- selection logic ---
       if (!state.selectedCards.some((c) => c.id === card.id)) {
+        // Update lastPickTime only on successful pick
+        lastPickTime = now;
+
         const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
         const isSSC = state.mode === 'ssc';
         const shouldRecycle = isBlitz || isSSC;
@@ -145,7 +150,7 @@ export const useGameStore = create<GameStore>()(
         });
       }
 
-      // Schedule unlock (always runs, even if card was duplicate)
+      // Schedule unlock
       scheduleUnlock(set);
     },
     

@@ -261,6 +261,11 @@ export function ConveyorBelt({
     e.stopPropagation();
     (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
+    // Visual removal: prevent this card from being a target for the rest of the frame
+    const el = e.currentTarget as HTMLElement;
+    el.style.pointerEvents = 'none';
+    el.style.visibility = 'hidden';
+
     // Pointer capture to prevent multi-target / ghost interactions
     try {
       e.currentTarget.setPointerCapture(e.pointerId);

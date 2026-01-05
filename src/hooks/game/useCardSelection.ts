@@ -3,6 +3,8 @@ import { Card, GameState } from '@/types/game';
 
 const LOCK_MS = 500; // Max 500ms lock time
 
+// Consolidated strict sequential lock (synchronous gate across all pick sources)
+let lastPickTime = 0;
 export function useCardSelection(
   setState: React.Dispatch<React.SetStateAction<GameState>>
 ) {
@@ -23,19 +25,13 @@ export function useCardSelection(
         console.log('[useCardSelection] selectCard called', {
           id: card.id,
           t: now,
+          lastPickTime,
         });
       }
 
       setState((prev) => {
-        // Ghost-event dedupe: discard events that arrive too quickly
-        if (prev.lastProcessedTimestamp && now - prev.lastProcessedTimestamp < 50) return prev;
-
-        // Hard cap: if hand is full, never allow another card (also clears stale locks)
-        if (prev.selectedCards.length >= 5) {
-          return prev.isSelectionLocked || prev.isProcessingSelection
-            ? { ...prev, isSelectionLocked: false, isProcessingSelection: false }
-            : prev;
-        }
+        // Global synchronous gate (must be first)
+        if (now - lastPickTime < 400 || prev.selectedCards.length >= 5) return prev;
 
         // Safety check: if hand is incomplete but lock is stuck, force unlock
         if (prev.isSelectionLocked) {
@@ -52,17 +48,19 @@ export function useCardSelection(
             : prev;
         }
 
+        // Duplicate card? ignore (and DO NOT advance lastPickTime)
+        if (prev.selectedCards.some((c) => c.id === card.id)) return prev;
+
+        // Success: advance global sequential lock timestamp
+        lastPickTime = now;
+
         // Lock immediately before any other logic
         const nextStateBase = {
           ...prev,
           isSelectionLocked: true,
           isProcessingSelection: true,
           lastHandLengthChangeAt: now,
-          lastProcessedTimestamp: now,
         };
-
-        // Duplicate card? Keep lock (released by timeout) but don't mutate hand.
-        if (prev.selectedCards.some((c) => c.id === card.id)) return nextStateBase;
 
         const isBlitz = prev.mode === 'blitz_fc' || prev.mode === 'blitz_cb';
         const isSSC = prev.mode === 'ssc';
