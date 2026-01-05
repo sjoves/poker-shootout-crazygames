@@ -41,14 +41,18 @@ export function ConveyorBelt({
   const returnDelayMs = 3000;
   const { playSound } = useAudio();
   const isMobile = useIsMobile();
-  
+
+  // Busy flag to prevent multi-touch / ghost taps
+  const busyUntilRef = useRef<number>(0);
+  const BUSY_MS = 300;
+
   // Force re-render only when cards are added/removed
   const [, setRenderTrigger] = useState(0);
   const triggerRender = useCallback(() => setRenderTrigger(v => v + 1), []);
-  
+
   // Track when cards are ready for animation
   const [cardsReady, setCardsReady] = useState(false);
-  
+
   const cardWidth = isMobile ? 72 : 64;
   const cardSpacing = isMobile ? 28 : 20;
 
@@ -257,6 +261,18 @@ export function ConveyorBelt({
   }, [isPaused, cardsReady, selectedCardIds, speed, rows, cardWidth, cardSpacing, deck, triggerRender]);
 
   const handleCardPointerDown = useCallback((card: ConveyorCard, e: React.PointerEvent) => {
+    // Prevent ghost taps: block if busy
+    const now = performance.now();
+    if (now < busyUntilRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    // Set busy flag immediately
+    busyUntilRef.current = now + BUSY_MS;
+
+    // Stop all event propagation first
     e.preventDefault();
     e.stopPropagation();
     (e.nativeEvent as any)?.stopImmediatePropagation?.();
@@ -272,6 +288,7 @@ export function ConveyorBelt({
     } catch {
       // ignore
     }
+
     const originalCard: Card = {
       id: card.id.split('-row')[0],
       suit: card.suit,
@@ -280,6 +297,9 @@ export function ConveyorBelt({
     };
     playSound('cardSelect');
     onSelectCard(originalCard);
+
+    // Final preventDefault to stop any click event from firing
+    e.preventDefault();
   }, [onSelectCard, playSound]);
 
   const rowHeight = 120;
