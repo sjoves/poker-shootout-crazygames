@@ -82,18 +82,8 @@ const STORE_INITIAL_STATE: GameState = {
   phaseOverride: undefined,
 };
 
-// Selection unlock timer (Zustand store variant)
-let selectionUnlockTimer: ReturnType<typeof setTimeout> | null = null;
-
-// Consolidated strict sequential lock (synchronous gate across all pick sources)
-let lastPickTime = 0;
-// Safety watchdog: ensures lock never stays on for more than 500ms
-const scheduleUnlock = (set: (partial: Partial<GameState>) => void) => {
-  if (selectionUnlockTimer) clearTimeout(selectionUnlockTimer);
-  selectionUnlockTimer = setTimeout(() => {
-    set({ isSelectionLocked: false, isProcessingSelection: false });
-  }, 500); // Max 500ms lock time
-};
+// Atomic boolean lock for selection (no time-based gating)
+let isSelecting = false;
 
 export const useGameStore = create<GameStore>()(
   subscribeWithSelector((set, get) => ({
@@ -104,12 +94,21 @@ export const useGameStore = create<GameStore>()(
     // ATOMIC CARD SELECTION - Only updates selectedCards and deck
     // ========================================================================
     selectCard: (card: Card) => {
+      // Atomic lock - reject if already processing
+      if (isSelecting) return;
+      isSelecting = true;
+
       const state = get();
       
-      // All validation in one place
-      if (state.selectedCards.length >= 5) return;
-      if (!state.isPlaying || state.isPaused) return;
-      if (state.selectedCards.some((c) => c.id === card.id)) return;
+      // Validation
+      if (state.selectedCards.length >= 5 || !state.isPlaying || state.isPaused) {
+        queueMicrotask(() => { isSelecting = false; });
+        return;
+      }
+      if (state.selectedCards.some((c) => c.id === card.id)) {
+        queueMicrotask(() => { isSelecting = false; });
+        return;
+      }
 
       const isBlitz = state.mode === 'blitz_fc' || state.mode === 'blitz_cb';
       const isSSC = state.mode === 'ssc';
@@ -121,6 +120,9 @@ export const useGameStore = create<GameStore>()(
         deck: state.deck.filter((c) => c.id !== card.id),
         cardsSelected: state.cardsSelected + 1,
       });
+
+      // Release lock in next microtask
+      queueMicrotask(() => { isSelecting = false; });
     },
     
     // ========================================================================
