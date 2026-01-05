@@ -193,9 +193,11 @@ export const RewardedAd = forwardRef<HTMLDivElement, RewardedAdProps>(function R
             )}
           </div>
 
+          {/* Premium upsell hidden for now
           <p className="text-xs text-center text-muted-foreground mt-6">
             Go Premium for an ad-free experience • $4.99/month
           </p>
+          */}
         </motion.div>
       </motion.div>
     </AnimatePresence>
