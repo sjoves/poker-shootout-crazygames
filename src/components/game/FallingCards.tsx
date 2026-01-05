@@ -74,9 +74,8 @@ function fisherYatesShuffle<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Module-level global pick lock (prevents a single tap from selecting multiple cards)
-const PICK_LOCK_MS = 400;
-let globalPickLockUntil = 0;
+// Atomic boolean lock (no time-based gating)
+let isSelectingGlobal = false;
 
 // Native event timestamp deduplication
 let lastNativeEventTs = 0;
@@ -142,7 +141,7 @@ export function FallingCards({
     cardsRef.current = [];
     cardElementsRef.current.clear();
     pickedInstanceKeysRef.current.clear();
-    globalPickLockUntil = 0;
+    isSelectingGlobal = false;
     triggerRender();
   }, [reshuffleTrigger, reshuffleDeck, triggerRender]);
 
@@ -153,7 +152,7 @@ export function FallingCards({
       cardsRef.current = [];
       cardElementsRef.current.clear();
       pickedInstanceKeysRef.current.clear();
-      globalPickLockUntil = 0;
+      isSelectingGlobal = false;
       triggerRender();
     }
   }, [deck.length, reshuffleDeck, triggerRender]);
@@ -311,7 +310,6 @@ export function FallingCards({
   // =========================================================================
   const handleContainerPointerDown = useCallback(
     (e: React.PointerEvent) => {
-      const tNow = performance.now();
       const nativeTs = e.nativeEvent.timeStamp;
       
       // Debug: log every handler invocation
@@ -338,93 +336,99 @@ export function FallingCards({
         return;
       }
 
-      // Global time lock
-      if (tNow < globalPickLockUntil) {
-        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_time_lock', extra: `${(globalPickLockUntil - tNow).toFixed(0)}ms remaining` });
+      // Atomic lock - reject if already processing
+      if (isSelectingGlobal) {
+        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_atomic_lock', pointerId: e.pointerId });
         return;
       }
+      isSelectingGlobal = true;
 
-      // Hand is full
-      if (selectedCountRef.current >= 5) {
-        logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_hand_full', selectedCount: selectedCountRef.current });
-        return;
-      }
-
-      // Get pointer position relative to container
-      const containerRect = containerRef.current?.getBoundingClientRect();
-      if (!containerRect) return;
-      const pointerX = e.clientX - containerRect.left;
-      const pointerY = e.clientY - containerRect.top;
-
-      // Hit-test: find the top-most card under the pointer (highest z-index = last in array)
-      let hitCard: LocalFallingCard | null = null;
-      for (let i = cardsRef.current.length - 1; i >= 0; i--) {
-        const card = cardsRef.current[i];
-        // Already picked?
-        if (pickedInstanceKeysRef.current.has(card.instanceKey)) continue;
-        // Bounding box test (ignore rotation for simplicity)
-        if (
-          pointerX >= card.x &&
-          pointerX <= card.x + CARD_WIDTH &&
-          pointerY >= card.y &&
-          pointerY <= card.y + CARD_HEIGHT
-        ) {
-          hitCard = card;
-          break; // top-most wins
+      try {
+        // Hand is full
+        if (selectedCountRef.current >= 5) {
+          logDebugEvent({ source: 'FallingCards', action: 'BLOCKED_hand_full', selectedCount: selectedCountRef.current });
+          return;
         }
+
+        // Get pointer position relative to container
+        const containerRect = containerRef.current?.getBoundingClientRect();
+        if (!containerRect) return;
+        const pointerX = e.clientX - containerRect.left;
+        const pointerY = e.clientY - containerRect.top;
+
+        // Hit-test: find the top-most card under the pointer (highest z-index = last in array)
+        let hitCard: LocalFallingCard | null = null;
+        for (let i = cardsRef.current.length - 1; i >= 0; i--) {
+          const card = cardsRef.current[i];
+          // Already picked?
+          if (pickedInstanceKeysRef.current.has(card.instanceKey)) continue;
+          // Bounding box test (ignore rotation for simplicity)
+          if (
+            pointerX >= card.x &&
+            pointerX <= card.x + CARD_WIDTH &&
+            pointerY >= card.y &&
+            pointerY <= card.y + CARD_HEIGHT
+          ) {
+            hitCard = card;
+            break; // top-most wins
+          }
+        }
+
+        if (!hitCard) {
+          logDebugEvent({ source: 'FallingCards', action: 'no_hit', extra: `pos(${pointerX.toFixed(0)},${pointerY.toFixed(0)})` });
+          return;
+        }
+
+        // UPDATE NATIVE EVENT TRACKING
+        lastNativeEventTs = nativeTs;
+        lastNativePointerId = e.pointerId;
+
+        // Lock pointer
+        activePointerIdRef.current = e.pointerId;
+        const releasePointer = () => {
+          activePointerIdRef.current = null;
+        };
+        window.addEventListener('pointerup', releasePointer, { once: true });
+        window.addEventListener('pointercancel', releasePointer, { once: true });
+
+        pickedInstanceKeysRef.current.add(hitCard.instanceKey);
+
+        // Event termination
+        e.preventDefault();
+        e.stopPropagation();
+        (e.nativeEvent as any)?.stopImmediatePropagation?.();
+
+        // Instant visual removal (opacity: 0 for hardware-accelerated hide)
+        const wrapper = cardElementsRef.current.get(hitCard.instanceKey);
+        if (wrapper) {
+          wrapper.style.opacity = '0';
+          wrapper.style.pointerEvents = 'none';
+        }
+
+        logDebugEvent({
+          source: 'FallingCards',
+          action: 'ACCEPTED_pick',
+          cardId: hitCard.id,
+          instanceKey: hitCard.instanceKey,
+          pointerId: e.pointerId,
+          nativeTs,
+          selectedCount: selectedCountRef.current,
+        });
+
+        hitCard.isTouched = true;
+        playSound('cardSelect');
+        onSelectCard(hitCard);
+
+        // Remove from refs
+        cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== hitCard!.instanceKey);
+        cardElementsRef.current.delete(hitCard.instanceKey);
+        triggerRender();
+      } finally {
+        // Release lock in next microtask
+        queueMicrotask(() => {
+          isSelectingGlobal = false;
+        });
       }
-
-      if (!hitCard) {
-        logDebugEvent({ source: 'FallingCards', action: 'no_hit', extra: `pos(${pointerX.toFixed(0)},${pointerY.toFixed(0)})` });
-        return;
-      }
-
-      // UPDATE NATIVE EVENT TRACKING
-      lastNativeEventTs = nativeTs;
-      lastNativePointerId = e.pointerId;
-
-      // Lock pointer
-      activePointerIdRef.current = e.pointerId;
-      const releasePointer = () => {
-        activePointerIdRef.current = null;
-      };
-      window.addEventListener('pointerup', releasePointer, { once: true });
-      window.addEventListener('pointercancel', releasePointer, { once: true });
-
-      // Lock global pick time
-      globalPickLockUntil = tNow + PICK_LOCK_MS;
-      pickedInstanceKeysRef.current.add(hitCard.instanceKey);
-
-      // Event termination
-      e.preventDefault();
-      e.stopPropagation();
-      (e.nativeEvent as any)?.stopImmediatePropagation?.();
-
-      // Instant visual removal (opacity: 0 for hardware-accelerated hide)
-      const wrapper = cardElementsRef.current.get(hitCard.instanceKey);
-      if (wrapper) {
-        wrapper.style.opacity = '0';
-        wrapper.style.pointerEvents = 'none';
-      }
-
-      logDebugEvent({
-        source: 'FallingCards',
-        action: 'ACCEPTED_pick',
-        cardId: hitCard.id,
-        instanceKey: hitCard.instanceKey,
-        pointerId: e.pointerId,
-        nativeTs,
-        selectedCount: selectedCountRef.current,
-      });
-
-      hitCard.isTouched = true;
-      playSound('cardSelect');
-      onSelectCard(hitCard);
-
-      // Remove from refs
-      cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== hitCard!.instanceKey);
-      cardElementsRef.current.delete(hitCard.instanceKey);
-      triggerRender();
     },
     [onSelectCard, playSound, triggerRender]
   );
