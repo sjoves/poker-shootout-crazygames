@@ -64,9 +64,9 @@ export function BonusRound({
   }, [timeRemaining, introPhase, playSound]);
 
   // Calculate number of cards based on bonus round number
-  // First bonus round: 10 cards (2x5), then 20, 30, 40, 50, max 52
+  // First bonus round: 10 cards (2x5), then 20, max 24
   const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
-  const cardCount = Math.min(effectiveBonusRound * 10, 52);
+  const cardCount = Math.min(effectiveBonusRound * 10, 24);
   // First bonus round uses 5 columns for 2x5 grid; others use standard grid
   const isFirstBonusRound = effectiveBonusRound === 1;
   const gridCols = isFirstBonusRound ? 5 : (isMobile ? 5 : 6);
