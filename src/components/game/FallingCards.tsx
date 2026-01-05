@@ -16,7 +16,7 @@ interface FallingCardsProps {
   gameMode?: 'ssc' | 'classic' | 'blitz';
 }
 
-type LocalFallingCard = FallingCard & { instanceKey: string; isTouched?: boolean };
+type LocalFallingCard = FallingCard & { instanceKey: string; isTouched?: boolean; isPicked?: boolean };
 
 // Fisher-Yates shuffle using crypto for high-entropy randomness
 function fisherYatesShuffle<T>(array: T[]): T[] {
@@ -234,6 +234,25 @@ export function FallingCards({
 
   const handleCardPointerDown = useCallback(
     (card: LocalFallingCard, e: React.PointerEvent) => {
+      // Hand capacity hard-stop (prevents 6th-card bug even if upstream misfires)
+      if (selectedCards.length >= 5) return;
+
+      // Local per-card lock: prevent double firing on the same falling card
+      if (card.isPicked) return;
+      card.isPicked = true;
+
+      // Instant visual removal + hitbox disable BEFORE any global selection logic
+      const wrapper = cardElementsRef.current.get(card.instanceKey);
+      if (wrapper) {
+        wrapper.style.pointerEvents = 'none';
+        wrapper.style.opacity = '0';
+        wrapper.style.transition = 'none';
+      }
+      const target = e.currentTarget as HTMLElement;
+      target.style.pointerEvents = 'none';
+      target.style.opacity = '0';
+      target.style.transition = 'none';
+
       e.preventDefault();
       e.stopPropagation();
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
@@ -244,19 +263,19 @@ export function FallingCards({
       } catch {
         // ignore
       }
-      
+
       // Update touched state
       card.isTouched = true;
-      
+
       playSound('cardSelect');
       onSelectCard(card);
-      
+
       // Remove from refs
       cardsRef.current = cardsRef.current.filter((c) => c.instanceKey !== card.instanceKey);
       cardElementsRef.current.delete(card.instanceKey);
       triggerRender();
     },
-    [onSelectCard, playSound, triggerRender]
+    [onSelectCard, playSound, triggerRender, selectedCards.length]
   );
 
   // Get current cards for render
@@ -278,7 +297,7 @@ export function FallingCards({
             transform: `translate3d(${card.x}px, ${card.y}px, 0) rotate(${card.rotation}deg)`,
             willChange: "transform",
           }}
-          className="z-10"
+          className={`z-10 ${card.isPicked ? 'pointer-events-none opacity-0' : ''}`}
         >
           <div
             onPointerDown={(e) => handleCardPointerDown(card, e)}

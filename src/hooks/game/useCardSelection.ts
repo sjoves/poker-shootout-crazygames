@@ -19,19 +19,27 @@ export function useCardSelection(
       const now = Date.now();
 
       setState((prev) => {
+        // Hard cap: if hand is full, never allow another card (also clears stale locks)
+        if (prev.selectedCards.length >= 5) {
+          return prev.isSelectionLocked || prev.isProcessingSelection
+            ? { ...prev, isSelectionLocked: false, isProcessingSelection: false }
+            : prev;
+        }
+
         // Safety check: if hand is incomplete but lock is stuck, force unlock
-        if (prev.isSelectionLocked && prev.selectedCards.length < 5) {
+        if (prev.isSelectionLocked) {
           const lockAge = prev.lastHandLengthChangeAt ? now - prev.lastHandLengthChangeAt : 0;
-          if (lockAge > 500) {
-            // Force unlock - lock has been held too long, continue with selection
-          } else {
-            return prev; // Lock is still valid
-          }
+          if (lockAge <= 500) return prev; // Lock is still valid
+          // else: lock is stale; continue and re-lock below
         }
 
         // Atomic selection gate
-        if (prev.isSelectionLocked || prev.selectedCards.length >= 5) return prev;
-        if (!prev.isPlaying || prev.isPaused) return prev;
+        if (!prev.isPlaying || prev.isPaused) {
+          // If selection can't proceed, ensure we don't deadlock
+          return prev.isSelectionLocked || prev.isProcessingSelection
+            ? { ...prev, isSelectionLocked: false, isProcessingSelection: false }
+            : prev;
+        }
 
         // Lock immediately before any other logic
         const nextStateBase = {
@@ -72,4 +80,5 @@ export function useCardSelection(
 
   return { selectCard };
 }
+
 
