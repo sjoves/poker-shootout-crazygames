@@ -1,5 +1,4 @@
 import React, { useCallback, useRef, memo } from 'react';
-import { motion } from 'framer-motion';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -14,7 +13,7 @@ interface StaticGridProps {
 // Show at most 25 cards in a 5x5 grid
 const MAX_VISIBLE_CARDS = 25;
 const GRID_COLUMNS = 5;
-const BUSY_MS = 80; // Fast response for same-spot clicking
+const BUSY_MS = 50; // Minimal gate for rapid clicking
 
 // Memoized card slot - only re-renders when its specific card changes
 interface CardSlotProps {
@@ -54,27 +53,21 @@ const CardSlot = memo(
 );
 
 export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridProps) {
-  // Simply slice the first 25 cards - deck changes will auto-fill slots
   const visibleCards = deck.slice(0, MAX_VISIBLE_CARDS);
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
-  // Busy flag to prevent multi-touch / ghost taps
   const busyUntilRef = useRef<number>(0);
-
-  // Sitting Duck: larger cards on both mobile + desktop
   const cardSize = isMobile ? 'sdm' : 'sd';
 
   const handleCardPointerDown = useCallback(
     (card: Card, e: React.PointerEvent) => {
-      // Global hand guard
       if (selectedCardIds.length >= 5) {
         e.preventDefault();
         e.stopPropagation();
         return;
       }
 
-      // Prevent ghost taps: block if busy
       const now = performance.now();
       if (now < busyUntilRef.current) {
         e.preventDefault();
@@ -82,7 +75,6 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
         return;
       }
 
-      // Already selected
       if (selectedCardIds.includes(card.id)) {
         e.preventDefault();
         e.stopPropagation();
@@ -91,27 +83,18 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
 
       busyUntilRef.current = now + BUSY_MS;
 
-      // Stop all event propagation
       e.stopPropagation();
       (e.nativeEvent as any)?.stopImmediatePropagation?.();
 
-      // Optimistic: play sound immediately
       playSound('cardSelect');
-      
-      // Trigger selection (store update is synchronous)
       onSelectCard(card);
-
-      // Prevent click synthesis after pointerdown
       e.preventDefault();
     },
     [onSelectCard, playSound, selectedCardIds]
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.15 }}
+    <div
       className="absolute inset-0 flex items-center justify-center"
       style={{ paddingTop: '5rem', paddingBottom: '9rem' }}
     >
@@ -132,6 +115,6 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
           />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }
