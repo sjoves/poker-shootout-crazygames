@@ -22,7 +22,7 @@ export default function SplashScreen() {
   const { user, profile } = useAuth();
   const { isPremium, loading } = useSubscription();
   const { currentLogo } = useTheme();
-  const { user: crazyGamesUser } = useCrazyGames();
+  const { user: crazyGamesUser, loadingStop } = useCrazyGames();
   const {
     streak,
     achievements,
@@ -48,6 +48,11 @@ export default function SplashScreen() {
   const displayUsername = crazyGamesUser?.username || profile?.username;
   const displayAvatar = crazyGamesUser?.profilePictureUrl || profile?.avatar_url;
   const isLoggedIn = !!crazyGamesUser || !!user;
+
+  // Signal to CrazyGames that initial loading is complete
+  useEffect(() => {
+    loadingStop();
+  }, [loadingStop]);
 
   // Show daily reward prompt for logged in users - only when canClaimReward is true
   // Uses sessionStorage to prevent re-triggering on page navigation/refresh within the same session

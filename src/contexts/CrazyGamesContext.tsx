@@ -21,8 +21,8 @@ interface CrazyGamesSDK {
     gameplayStart: () => void;
     gameplayStop: () => void;
     happytime: () => void;
-    sdkGameLoadingStart: () => void;
-    sdkGameLoadingStop: () => void;
+    loadingStart: () => void;
+    loadingStop: () => void;
   };
   user: {
     isUserAccountAvailable: boolean;
@@ -55,6 +55,8 @@ interface CrazyGamesContextValue {
   gameplayStart: () => void;
   gameplayStop: () => void;
   happytime: () => void;
+  loadingStart: () => void;
+  loadingStop: () => void;
   showMidgameAd: () => Promise<boolean>;
   showRewardedAd: () => Promise<boolean>;
   showAuthPrompt: () => Promise<CrazyGamesUser | null>;
@@ -66,11 +68,30 @@ interface CrazyGamesContextValue {
 
 const CrazyGamesContext = createContext<CrazyGamesContextValue | null>(null);
 
+// Keys to block for CrazyGames input protection
+const BLOCKED_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Space'];
+
 export function CrazyGamesProvider({ children }: { children: ReactNode }) {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [user, setUser] = useState<CrazyGamesUser | null>(null);
   const [hasAdblock, setHasAdblock] = useState(false);
+
+  // Input protection: prevent scrolling on arrow keys and spacebar
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (BLOCKED_KEYS.includes(e.key) || BLOCKED_KEYS.includes(e.code)) {
+        // Only prevent if not in an input/textarea
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, { passive: false });
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const initSDK = async () => {
@@ -79,6 +100,14 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
         console.log('CrazyGames SDK not available (not running on CrazyGames)');
         setIsInitialized(true);
         return;
+      }
+
+      // Call loadingStart before init
+      try {
+        window.CrazyGames.SDK.game.loadingStart();
+        console.log('CrazyGames: loadingStart');
+      } catch {
+        // Ignore if not available
       }
 
       try {
@@ -147,6 +176,28 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
       }, 5000);
 
       return () => clearInterval(checkInterval);
+    }
+  }, []);
+
+  const loadingStart = useCallback(() => {
+    if (window.CrazyGames?.SDK) {
+      try {
+        window.CrazyGames.SDK.game.loadingStart();
+        console.log('CrazyGames: loadingStart');
+      } catch {
+        // Ignore errors
+      }
+    }
+  }, []);
+
+  const loadingStop = useCallback(() => {
+    if (window.CrazyGames?.SDK) {
+      try {
+        window.CrazyGames.SDK.game.loadingStop();
+        console.log('CrazyGames: loadingStop');
+      } catch {
+        // Ignore errors
+      }
     }
   }, []);
 
@@ -267,6 +318,8 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
         gameplayStart,
         gameplayStop,
         happytime,
+        loadingStart,
+        loadingStop,
         showMidgameAd,
         showRewardedAd,
         showAuthPrompt,
