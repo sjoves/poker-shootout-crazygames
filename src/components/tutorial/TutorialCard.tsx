@@ -17,6 +17,8 @@ const SUIT_COLOR_CLASS: Record<Suit, string> = {
 };
 
 const SIZE_CONFIG = {
+  xs: { card: "w-10 h-[56px]", rank: "text-[10px]", corner: "text-[8px]", center: "text-base" },
+  sm: { card: "w-12 h-[67px]", rank: "text-xs", corner: "text-[8px]", center: "text-lg" },
   ssc: { card: "w-[68px] h-[95px]", rank: "text-sm", corner: "text-[10px]", center: "text-2xl" },
   sd: { card: "w-[85px] h-[119px]", rank: "text-base", corner: "text-xs", center: "text-3xl" },
 } as const;
