@@ -52,8 +52,9 @@ export function ConveyorBelt({
   // Track when cards are ready for animation
   const [cardsReady, setCardsReady] = useState(false);
 
-  const cardWidth = isMobile ? 72 : 64;
-  const cardSpacing = isMobile ? 28 : 20;
+  // Use viewport-relative sizing for responsive cards
+  const cardWidth = isMobile ? Math.min(72, window.innerWidth * 0.18) : Math.min(64, window.innerWidth * 0.06);
+  const cardSpacing = isMobile ? Math.min(28, window.innerWidth * 0.07) : Math.min(20, window.innerWidth * 0.02);
 
   // Reset on reshuffle
   useEffect(() => {
@@ -323,17 +324,18 @@ export function ConveyorBelt({
     }
   }, [onSelectCard, playSound, selectedCardIds, triggerRender]);
 
-  const rowHeight = 120;
+  const rowHeight = isMobile ? 100 : 120;
   const totalHeight = rows * rowHeight;
   const visibleCards = cardsRef.current;
 
   return (
     <div 
       ref={containerRef}
-      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-4 pt-40"
+      className="absolute inset-0 z-10 flex items-start justify-center overflow-hidden px-2 sm:px-4 pt-32 sm:pt-40"
+      style={{ maxWidth: '100vw' }}
     >
       <div 
-        className="relative w-full"
+        className="relative w-full max-w-[100vw]"
         style={{ height: totalHeight }}
       >
         {/* Track backgrounds */}
@@ -371,9 +373,10 @@ export function ConveyorBelt({
           >
             <PlayingCard
               card={card}
-              size="md"
+              size={isMobile ? 'sdm' : 'md'}
               animate={false}
               isSelected={selectedCardIds.includes(card.id.split('-row')[0])}
+              className="flex-shrink"
             />
           </div>
         ))}
