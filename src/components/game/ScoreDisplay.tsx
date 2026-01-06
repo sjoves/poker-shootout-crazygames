@@ -84,6 +84,7 @@ export function ScorePanel({
   gameMode = 'classic'
 }: ScorePanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [prevMasterVolume, setPrevMasterVolume] = useState(0.7);
   const { theme, setTheme, themes } = useTheme();
   const {
     masterVolume,
@@ -98,6 +99,15 @@ export function ScorePanel({
     setMusicVolume,
     playSound,
   } = useAudio();
+
+  const handleMasterMuteToggle = () => {
+    if (masterVolume > 0) {
+      setPrevMasterVolume(masterVolume);
+      setMasterVolume(0);
+    } else {
+      setMasterVolume(prevMasterVolume);
+    }
+  };
 
   const handleSfxToggle = (enabled: boolean) => {
     setSfxEnabled(enabled);
@@ -270,7 +280,7 @@ export function ScorePanel({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setMasterVolume(masterVolume > 0 ? 0 : 0.7)}
+                        onClick={handleMasterMuteToggle}
                         className="p-1 hover:bg-primary/10 rounded transition-colors"
                       >
                         {masterVolume > 0 ? (
@@ -345,7 +355,7 @@ export function ScorePanel({
               {/* Theme Selection */}
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-4">Theme</h3>
-                <div className="grid grid-cols-2 gap-1.5">
+                <div className="grid grid-cols-1 gap-1.5">
                   {themes.map((t) => (
                     <button
                       key={t.id}
