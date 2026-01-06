@@ -27,7 +27,7 @@ const SIZE_CONFIG = {
   sm: { card: 'w-14 h-[79px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
   ssc: { card: 'w-[68px] h-[95px]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
   // Game cards use vh-based sizing for CrazyGames compatibility (no scrolling)
-  sdm: { card: 'w-[calc(16vh*0.714)] h-[16vh]', rank: 'text-sm', corner: 'text-[10px]', center: 'text-xl', pip: 'text-[8px]', gap: 'gap-0' },
+  sdm: { card: 'w-[calc(13.6vh*0.714)] h-[13.6vh]', rank: 'text-sm', corner: 'text-[9px]', center: 'text-lg', pip: 'text-[7px]', gap: 'gap-0' },
   sd: { card: 'w-[calc(17vh*0.714)] h-[17vh]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[9px]', gap: 'gap-0' },
   md: { card: 'w-[76px] h-[106px]', rank: 'text-base', corner: 'text-xs', center: 'text-2xl', pip: 'text-[10px]', gap: 'gap-0.5' },
   // Hand display uses vh-based sizing
@@ -140,7 +140,7 @@ const EMPTY_SLOT_SIZES = {
   xs: 'w-12 h-[67px]',
   sm: 'w-14 h-[79px]',
   ssc: 'w-[68px] h-[95px]',
-  sdm: 'w-[calc(16vh*0.714)] h-[16vh]',
+  sdm: 'w-[calc(13.6vh*0.714)] h-[13.6vh]',
   sd: 'w-[calc(17vh*0.714)] h-[17vh]',
   md: 'w-[76px] h-[106px]',
   hand: 'w-[calc(11vh*0.714)] h-[11vh]',
