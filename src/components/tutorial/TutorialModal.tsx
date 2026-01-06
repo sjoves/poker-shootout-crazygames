@@ -237,18 +237,18 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
         <p className="text-xs text-muted-foreground mb-1 text-center font-medium">
           YOUR HAND
         </p>
-        <div className="flex justify-center gap-1 min-h-[80px]">
+        <div className="flex justify-center gap-1 min-h-[58px]">
           {Array.from({ length: 5 }).map((_, i) => (
             selectedCards[i] ? (
               <motion.div
                 key={selectedCards[i].id}
-                initial={{ scale: 0, y: 50, rotate: -10 }}
+                initial={{ scale: 0, y: 30, rotate: -10 }}
                 animate={{ scale: 1, y: 0, rotate: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
               >
                 <TutorialCard
                   card={selectedCards[i]}
-                  size="ssc"
+                  size="sm"
                 />
               </motion.div>
             ) : (
@@ -260,7 +260,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
                 } : {}}
                 transition={{ repeat: Infinity, duration: 1 }}
               >
-                <EmptyCardSlot size="ssc" />
+                <EmptyCardSlot size="sm" />
               </motion.div>
             )
           ))}
@@ -319,18 +319,18 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
               >
                 <PlayingCard
                   card={card}
-                  size="sm"
+                  size="xs"
                   onClick={() => handleCardClick(card)}
                   animate={false}
-                  className={isTarget && showHandPointer ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''}
+                  className={isTarget && showHandPointer ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
                 />
                 {isTarget && showHandPointer && (
                   <motion.div
-                    className="absolute -top-8 left-1/2 -translate-x-1/2"
-                    animate={{ y: [0, 4, 0] }}
+                    className="absolute -top-6 left-1/2 -translate-x-1/2"
+                    animate={{ y: [0, 3, 0] }}
                     transition={{ repeat: Infinity, duration: 0.5 }}
                   >
-                    <Hand className="w-6 h-6 text-primary rotate-180" />
+                    <Hand className="w-5 h-5 text-primary rotate-180" />
                   </motion.div>
                 )}
               </motion.div>
@@ -340,13 +340,13 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
       </div>
 
       {/* Action buttons */}
-      <div className="flex justify-center gap-3">
-        <Button variant="outline" size="sm" onClick={handleReset} className="gap-1">
+      <div className="flex justify-center gap-2 pt-1">
+        <Button variant="outline" size="sm" onClick={handleReset} className="gap-1 h-7 text-xs">
           <RotateCcw className="w-3 h-3" />
           Try Again
         </Button>
         {showSuccess && (
-          <Button size="sm" onClick={onComplete} className="gap-1">
+          <Button size="sm" onClick={onComplete} className="gap-1 h-7 text-xs">
             Got it! <ArrowRight className="w-3 h-3" />
           </Button>
         )}
