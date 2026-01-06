@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTheme, ThemeName, THEMES } from '@/contexts/ThemeContext';
 import { useAudio } from '@/contexts/AudioContext';
@@ -29,6 +30,17 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     playSound,
   } = useAudio();
 
+  const [previousMasterVolume, setPreviousMasterVolume] = useState<number | null>(null);
+
+  const toggleMasterMute = () => {
+    if (masterVolume > 0) {
+      setPreviousMasterVolume(masterVolume);
+      setMasterVolume(0);
+    } else {
+      setMasterVolume(previousMasterVolume ?? 0.5);
+    }
+  };
+
   const handleSfxToggle = (enabled: boolean) => {
     setSfxEnabled(enabled);
     if (enabled) {
@@ -51,14 +63,18 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             {/* Master Volume */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleMasterMute}
+                  className="flex items-center gap-2"
+                >
                   {masterVolume > 0 ? (
                     <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
                   ) : (
                     <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
                   )}
                   <span className="text-sm font-medium">Master Volume</span>
-                </div>
+                </button>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground w-12 text-right">
                     {Math.round(masterVolume * 100)}%
@@ -67,7 +83,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => setMasterVolume(masterVolume > 0 ? 0 : 0.7)}
+                    onClick={toggleMasterMute}
                   >
                     {masterVolume > 0 ? (
                       <SpeakerWaveIcon className="w-4 h-4" />
