@@ -84,7 +84,7 @@ export function ScorePanel({
   gameMode = 'classic'
 }: ScorePanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [prevMasterVolume, setPrevMasterVolume] = useState(0.7);
+  const [prevMasterVolume, setPrevMasterVolume] = useState(0.5);
   const { theme, setTheme, themes } = useTheme();
   const {
     masterVolume,
@@ -102,10 +102,12 @@ export function ScorePanel({
 
   const handleMasterMuteToggle = () => {
     if (masterVolume > 0) {
+      // Save current volume before muting
       setPrevMasterVolume(masterVolume);
       setMasterVolume(0);
     } else {
-      setMasterVolume(prevMasterVolume);
+      // Restore to previous volume, or default to 50% if none saved
+      setMasterVolume(prevMasterVolume > 0 ? prevMasterVolume : 0.5);
     }
   };
 
