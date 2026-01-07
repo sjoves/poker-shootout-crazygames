@@ -67,39 +67,54 @@ let globalMasterGain: GainNode | null = null;
 let sdkInitialized = false;
 let unlockAttempted = false;
 
-// Get master gain node (creates it if needed)
-function getMasterGainNode(audioCtx?: AudioContext): GainNode {
-  const ctx = audioCtx ?? globalAudioContext;
-  if (!ctx) {
-    throw new Error('[Audio] No AudioContext available for master gain');
-  }
-
-  // Keep globals in sync (should always be the same context)
-  if (!globalAudioContext) globalAudioContext = ctx;
-
-  // (Re)create if missing or tied to a different context
-  if (!globalMasterGain || globalMasterGain.context !== ctx) {
-    globalMasterGain = ctx.createGain();
-    globalMasterGain.connect(ctx.destination);
-
-    // Initialize from saved settings if available
+// Strict master gain singleton (created once per page / AudioContext)
+function readSavedMasterVolume(): number | null {
+  try {
     const saved = localStorage.getItem('poker-shootout-audio');
-    if (saved) {
-      try {
-        const settings = JSON.parse(saved);
-        if (typeof settings.masterVolume === 'number') {
-          globalMasterGain.gain.setValueAtTime(settings.masterVolume, ctx.currentTime);
-          console.log('[Audio] Master gain initialized from saved settings:', settings.masterVolume);
-        }
-      } catch {
-        // ignore
-      }
-    }
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    return typeof parsed?.masterVolume === 'number' ? parsed.masterVolume : null;
+  } catch {
+    return null;
+  }
+}
 
-    console.log('[Audio] Created global master gain node');
+// Must be used by all audio paths (no direct destination connections from sources)
+function getStrictMaster(ctx: AudioContext): GainNode {
+  if (globalMasterGain) {
+    if (globalMasterGain.context === ctx) return globalMasterGain;
+
+    // If a different AudioContext was created somehow, drop the old node to avoid bypass.
+    try {
+      globalMasterGain.disconnect();
+    } catch {
+      // ignore
+    }
+    globalMasterGain = null;
   }
 
+  globalMasterGain = ctx.createGain();
+
+  const initial = readSavedMasterVolume() ?? DEFAULT_SETTINGS.masterVolume;
+  globalMasterGain.gain.setValueAtTime(initial, ctx.currentTime);
+
+  // Master -> destination (and ONLY the master connects to destination)
+  globalMasterGain.connect(ctx.destination);
+
+  console.log('[Audio] Created global master gain node (strict), initial:', initial);
   return globalMasterGain;
+}
+
+// Safety: ensure a single, fresh connection from master -> speakers (no duplicate summing)
+function forceReconnectMaster(ctx: AudioContext): GainNode {
+  const master = getStrictMaster(ctx);
+  try {
+    master.disconnect();
+  } catch {
+    // ignore
+  }
+  master.connect(ctx.destination);
+  return master;
 }
 
 // Initialize CrazyGames SDK first (if available)
@@ -136,23 +151,9 @@ async function globalUnlockAudio(): Promise<boolean> {
     console.log('[Audio] Created global AudioContext, state:', globalAudioContext.state);
   }
 
-  // Create master gain node immediately after context creation
-  if (!globalMasterGain) {
-    globalMasterGain = globalAudioContext.createGain();
-    globalMasterGain.connect(globalAudioContext.destination);
-    // Load saved master volume from localStorage
-    const saved = localStorage.getItem('poker-shootout-audio');
-    if (saved) {
-      try {
-        const settings = JSON.parse(saved);
-        if (typeof settings.masterVolume === 'number') {
-          globalMasterGain.gain.setValueAtTime(settings.masterVolume, globalAudioContext.currentTime);
-          console.log('[Audio] Master gain initialized from saved settings:', settings.masterVolume);
-        }
-      } catch { /* ignore */ }
-    }
-    console.log('[Audio] Created global master gain node');
-  }
+  // Create + connect strict master gain node immediately after context creation
+  forceReconnectMaster(globalAudioContext);
+
 
   console.log('[Audio] AudioContext state before resume:', globalAudioContext.state);
 
@@ -207,7 +208,7 @@ function createOscillatorSound(
 ): void {
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
-  const masterGain = getMasterGainNode(audioCtx);
+  const masterGain = getStrictMaster(audioCtx);
   
   oscillator.connect(gainNode);
   // Route through global master gain (no direct destination fallbacks)
@@ -258,7 +259,7 @@ async function loadAudioBuffer(audioCtx: AudioContext, url: string): Promise<Aud
 
 function playCardSelect(audioCtx: AudioContext, volume: number): void {
   const url = publicAssetUrl('sounds/card-hit.mp3');
-  const masterGain = getMasterGainNode(audioCtx);
+  const masterGain = getStrictMaster(audioCtx);
   loadAudioBuffer(audioCtx, url)
     .then((buffer) => {
       const source = audioCtx.createBufferSource();
@@ -311,7 +312,7 @@ function playLevelComplete(audioCtx: AudioContext, volume: number): void {
 function playGameOver(audioCtx: AudioContext, volume: number): void {
   // Play the game-over.mp3 sound file
   const url = publicAssetUrl('sounds/game-over.mp3');
-  const masterGain = getMasterGainNode(audioCtx);
+  const masterGain = getStrictMaster(audioCtx);
   loadAudioBuffer(audioCtx, url)
     .then((buffer) => {
       const source = audioCtx.createBufferSource();
@@ -340,7 +341,7 @@ function playTimer(audioCtx: AudioContext, volume: number): void {
 function playCountdownTick(audioCtx: AudioContext, volume: number): void {
   // Sharp, urgent tick sound
   const now = audioCtx.currentTime;
-  const masterGain = getMasterGainNode(audioCtx);
+  const masterGain = getStrictMaster(audioCtx);
   
   // High-pitched tick
   const tick = audioCtx.createOscillator();
@@ -359,7 +360,7 @@ function playCountdownTick(audioCtx: AudioContext, volume: number): void {
 function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
   // More urgent double-tick for last 3 seconds
   const now = audioCtx.currentTime;
-  const masterGain = getMasterGainNode(audioCtx);
+  const masterGain = getStrictMaster(audioCtx);
   
   // First tick
   const tick1 = audioCtx.createOscillator();
@@ -391,7 +392,7 @@ function playCountdownUrgent(audioCtx: AudioContext, volume: number): void {
 function playBonusCountdown(audioCtx: AudioContext, volume: number): void {
   // Play the countdown pulse sound
   const url = publicAssetUrl('sounds/countdown-tick.mp3');
-  const masterGain = getMasterGainNode(audioCtx);
+  const masterGain = getStrictMaster(audioCtx);
   loadAudioBuffer(audioCtx, url)
     .then((buffer) => {
       const source = audioCtx.createBufferSource();
@@ -420,8 +421,8 @@ class BackgroundMusic {
   constructor(audioCtx: AudioContext) {
     this.audioCtx = audioCtx;
     this.gainNode = audioCtx.createGain();
-    // Route through master gain node (no direct destination fallbacks)
-    const masterGain = getMasterGainNode(audioCtx);
+    // Route through master gain node (strict)
+    const masterGain = getStrictMaster(audioCtx);
     this.gainNode.connect(masterGain);
   }
 
@@ -527,33 +528,35 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return audioCtxRef.current;
   }, []);
 
-  // Fallback unlock function - can be called explicitly from buttons
   const unlockAudio = useCallback(async (): Promise<boolean> => {
     console.log('[Audio] unlockAudio (fallback) called');
-    
+
     // Use the global unlock function
     const success = await globalUnlockAudio();
-    
+
     if (success) {
       setIsAudioUnlocked(true);
-      
+
       // Ensure we're using the global context
       if (globalAudioContext && !audioCtxRef.current) {
         audioCtxRef.current = globalAudioContext;
         musicRef.current = new BackgroundMusic(globalAudioContext);
       }
-      
-      // Play any queued sounds
+
+      // Force re-connect master -> destination to keep the "pipe" open
       const ctx = ensureAudioContext();
+      forceReconnectMaster(ctx);
+
+      // Play any queued sounds
       if (pendingSoundsRef.current.length > 0 && ctx.state === 'running') {
         console.log('[Audio] Playing', pendingSoundsRef.current.length, 'queued sounds');
-        pendingSoundsRef.current.forEach(sound => {
+        pendingSoundsRef.current.forEach((sound) => {
           playSoundInternal(ctx, sound, settings.sfxVolume);
         });
         pendingSoundsRef.current = [];
       }
     }
-    
+
     return success;
   }, [ensureAudioContext, settings.sfxVolume]);
 
@@ -670,14 +673,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     if (!settings.sfxEnabled) return;
 
     const ctx = ensureAudioContext();
-    const masterGainNode = (() => {
-      try {
-        return getMasterGainNode(ctx);
-      } catch {
-        return null;
-      }
-    })();
+
+    // Zero-bypass rule: do not play unless we can route via strict master
+    let masterGainNode: GainNode | null = null;
+    try {
+      masterGainNode = getStrictMaster(ctx);
+    } catch {
+      masterGainNode = null;
+    }
+
     console.log('[Audio Debug] Routing through Master Gain:', masterGainNode !== null);
+    if (!masterGainNode) return;
 
     // Individual sound volume only; master gain is handled globally
     const volume = settings.sfxVolume;
@@ -724,10 +730,11 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
       // Update state
       setSettings((prev) => ({ ...prev, masterVolume: volume }));
 
-      // Ensure master gain exists and update in real-time
       const ctx = ensureAudioContext();
-      const masterGain = getMasterGainNode(ctx);
-      masterGain.gain.setValueAtTime(volume, ctx.currentTime);
+      const master = forceReconnectMaster(ctx);
+
+      // Immediate volume sync (responsive slider)
+      master.gain.setTargetAtTime(volume, ctx.currentTime, 0.01);
       console.log('[Audio] Master gain set to:', volume);
     },
     setSfxEnabled: (enabled) => setSettings(prev => ({ ...prev, sfxEnabled: enabled })),
