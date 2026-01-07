@@ -95,7 +95,7 @@ export function OrbitCards({
   const containerRef = useRef<HTMLDivElement>(null);
   const safeZonePadding = 40;
 
-  const [playCardHit] = useSound('/sounds/card-hit.mp3', { volume: 0.3 });
+  const { playSound } = useAudio();
 
   // Ring config: Inner 5, Middle 8, Outer 12 = 25
   const cardsPerRing = useMemo(() => [5, 8, 12] as const, []);
