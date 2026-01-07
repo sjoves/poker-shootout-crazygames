@@ -141,8 +141,7 @@ export function FlippableCard({ card, isKept, isFlippedExternal, onFlip, onKeep,
             <span className={config.corner}>{suitSymbol}</span>
           </div>
 
-          {/* Center */}
-          <span className="text-xl font-normal">{suitSymbol}</span>
+          {/* Center - clean look without pips */}
 
           {/* Bottom-right corner - Jumbo style */}
           <div className="absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180">
