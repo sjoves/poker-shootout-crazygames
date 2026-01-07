@@ -118,8 +118,7 @@ const PlayingCardInner = forwardRef<HTMLButtonElement, PlayingCardProps>(functio
         <span className={config.corner}>{suitSymbol}</span>
       </div>
 
-      {/* Center pips/face */}
-      <CenterPips rank={card.rank} suit={card.suit} size={size} />
+      {/* Center - clean look without pips */}
 
       {/* Bottom-right corner (inverted) */}
       <div className={cn('absolute bottom-0.5 right-1 flex flex-col items-center leading-none rotate-180')}>
