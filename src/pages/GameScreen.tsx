@@ -418,8 +418,12 @@ export default function GameScreen() {
 
   return (
     <div className="h-[100vh] max-h-[100vh] flex flex-col overflow-hidden modern-bg relative">
-      {/* Main game area - takes full screen, no scrolling */}
-      <div className="flex-1 min-h-0 relative overflow-hidden flex-shrink-0">
+      {/* Main game area - layout varies by game mode */}
+      <div 
+        className={`flex-1 min-h-0 relative overflow-hidden flex-shrink-0 flex flex-col ${
+          isConveyor ? 'justify-start pt-4 pb-[140px]' : 'justify-center'
+        }`}
+      >
         {/* ScorePanel overlay */}
         {!isBonusRound && (
           <>
@@ -503,7 +507,7 @@ export default function GameScreen() {
           />
         )}
         {isConveyor && (
-          <div className="flex-grow flex items-center justify-center pb-[150px]">
+          <div className="flex-grow flex items-center justify-center">
             <ConveyorBelt
               deck={state.deck}
               selectedCardIds={selectedIds}
@@ -572,8 +576,16 @@ export default function GameScreen() {
         </AnimatePresence>
 
         {/* Hand display overlay - positioned at bottom */}
+        {/* Falling Cards: absolute overlay on top of gameplay */}
+        {/* Conveyor Belt: fixed bottom position (safe area handled by container padding) */}
         {!isBonusRound && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex flex-col items-center gap-2">
+          <div 
+            className={`left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 ${
+              isFalling 
+                ? 'absolute bottom-4 z-50' 
+                : 'absolute bottom-4 z-40'
+            }`}
+          >
             <HandDisplay cards={state.selectedCards} currentHand={state.currentHand} />
           </div>
         )}
