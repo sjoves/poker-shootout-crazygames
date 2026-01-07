@@ -23,6 +23,10 @@ interface AudioSettings {
 }
 
 interface AudioContextValue extends AudioSettings {
+  // Master volume helpers
+  isMuted: boolean;
+  toggleMute: () => void;
+
   setMasterVolume: (volume: number) => void;
   setSfxEnabled: (enabled: boolean) => void;
   setSfxVolume: (volume: number) => void;
@@ -480,6 +484,10 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     return DEFAULT_SETTINGS;
   });
 
+  // Used by toggleMute (kept in provider, not per-component)
+  const lastNonZeroMasterVolumeRef = useRef<number>(settings.masterVolume || DEFAULT_SETTINGS.masterVolume);
+
+
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
   const [isMusicLoading, setIsMusicLoading] = useState(false);
   const [isAudioUnlocked, setIsAudioUnlocked] = useState(() => window.__audioUnlocked ?? false);
@@ -487,7 +495,6 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const musicRef = useRef<BackgroundMusic | null>(null);
   const pendingSoundsRef = useRef<SoundType[]>([]);
 
-  // Sync with global unlock state
   useEffect(() => {
     const checkUnlockState = () => {
       if (window.__audioUnlocked && !isAudioUnlocked) {
@@ -565,6 +572,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem('poker-shootout-audio', JSON.stringify(settings));
   }, [settings]);
+
+  // Track last non-zero master volume for toggleMute
+  useEffect(() => {
+    if (settings.masterVolume > 0) {
+      lastNonZeroMasterVolumeRef.current = settings.masterVolume;
+    }
+  }, [settings.masterVolume]);
 
   // Update master gain node when master volume changes
   useEffect(() => {
@@ -724,19 +738,30 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     console.log('[Audio] AudioContext in unexpected state:', ctx.state, '- skipping sound:', soundType);
   }, [settings.sfxEnabled, settings.sfxVolume, ensureAudioContext]);
 
+  const setMasterVolume = (volume: number) => {
+    // Update state
+    setSettings((prev) => ({ ...prev, masterVolume: volume }));
+
+    const ctx = ensureAudioContext();
+    const master = forceReconnectMaster(ctx);
+
+    // Immediate volume sync (responsive slider)
+    master.gain.setTargetAtTime(volume, ctx.currentTime, 0.01);
+    console.log('[Audio] Master gain set to:', volume);
+  };
+
+  const toggleMute = () => {
+    const next = settings.masterVolume > 0
+      ? 0
+      : (lastNonZeroMasterVolumeRef.current || DEFAULT_SETTINGS.masterVolume);
+    setMasterVolume(next);
+  };
+
   const value: AudioContextValue = {
     ...settings,
-    setMasterVolume: (volume) => {
-      // Update state
-      setSettings((prev) => ({ ...prev, masterVolume: volume }));
-
-      const ctx = ensureAudioContext();
-      const master = forceReconnectMaster(ctx);
-
-      // Immediate volume sync (responsive slider)
-      master.gain.setTargetAtTime(volume, ctx.currentTime, 0.01);
-      console.log('[Audio] Master gain set to:', volume);
-    },
+    isMuted: settings.masterVolume <= 0,
+    toggleMute,
+    setMasterVolume,
     setSfxEnabled: (enabled) => setSettings(prev => ({ ...prev, sfxEnabled: enabled })),
     setSfxVolume: (volume) => setSettings(prev => ({ ...prev, sfxVolume: volume })),
     setMusicEnabled: (enabled) => setSettings(prev => ({ ...prev, musicEnabled: enabled })),

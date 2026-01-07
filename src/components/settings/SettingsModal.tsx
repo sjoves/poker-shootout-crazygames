@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+// Settings modal
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTheme, ThemeName, THEMES } from '@/contexts/ThemeContext';
 import { useAudio } from '@/contexts/AudioContext';
@@ -16,41 +16,15 @@ interface SettingsModalProps {
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { theme, setTheme, themes } = useTheme();
-  const {
-    masterVolume,
-    sfxEnabled,
-    sfxVolume,
-    musicEnabled,
-    musicVolume,
-    setMasterVolume,
-    setSfxEnabled,
-    setSfxVolume,
-    setMusicEnabled,
-    setMusicVolume,
-    playSound,
-  } = useAudio();
 
-  const [lastNonZeroMasterVolume, setLastNonZeroMasterVolume] = useState(0.5);
+  const audio = useAudio();
+  const { masterVolume, setMasterVolume, isMuted, toggleMute } = audio;
 
-  useEffect(() => {
-    if (masterVolume > 0) {
-      setLastNonZeroMasterVolume(masterVolume);
-    }
-  }, [masterVolume]);
-
-  const toggleMasterMute = () => {
-    if (masterVolume > 0) {
-      setLastNonZeroMasterVolume(masterVolume);
-      setMasterVolume(0);
-    } else {
-      setMasterVolume(lastNonZeroMasterVolume);
-    }
-  };
 
   const handleSfxToggle = (enabled: boolean) => {
-    setSfxEnabled(enabled);
+    audio.setSfxEnabled(enabled);
     if (enabled) {
-      setTimeout(() => playSound('buttonClick'), 50);
+      setTimeout(() => audio.playSound('buttonClick'), 50);
     }
   };
 
@@ -71,10 +45,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={toggleMasterMute}
+                  onClick={toggleMute}
                   className="flex items-center gap-2"
                 >
-                  {masterVolume > 0 ? (
+                  {!isMuted ? (
                     <SpeakerWaveIcon className="w-5 h-5 text-muted-foreground" />
                   ) : (
                     <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
@@ -89,9 +63,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={toggleMasterMute}
+                    onClick={toggleMute}
                   >
-                    {masterVolume > 0 ? (
+                    {!isMuted ? (
                       <SpeakerWaveIcon className="w-4 h-4" />
                     ) : (
                       <SpeakerXMarkIcon className="w-4 h-4" />
@@ -102,9 +76,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <Slider
                 value={[masterVolume * 100]}
                 onValueChange={([value]) => {
-                  const vol = value / 100;
-                  setMasterVolume(vol);
-                  if (vol > 0) setLastNonZeroMasterVolume(vol);
+                  // Real-time updates while dragging
+                  setMasterVolume(value / 100);
                 }}
                 max={100}
                 step={5}
@@ -116,7 +89,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {sfxEnabled ? (
+                  {audio.sfxEnabled ? (
                     <SpeakerWaveIcon className="w-5 h-5 text-primary" />
                   ) : (
                     <SpeakerXMarkIcon className="w-5 h-5 text-muted-foreground" />
@@ -124,24 +97,24 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <span className="text-sm font-medium">Sound Effects</span>
                 </div>
                 <Switch
-                  checked={sfxEnabled}
+                  checked={audio.sfxEnabled}
                   onCheckedChange={handleSfxToggle}
                 />
               </div>
-              {sfxEnabled && (
+              {audio.sfxEnabled && (
                 <div className="pl-7">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-muted-foreground">Volume</span>
                     <span className="text-xs text-muted-foreground">
-                      {Math.round(sfxVolume * 100)}%
+                      {Math.round(audio.sfxVolume * 100)}%
                     </span>
                   </div>
                   <Slider
-                    value={[sfxVolume * 100]}
+                    value={[audio.sfxVolume * 100]}
                     onValueChange={([value]) => {
-                      setSfxVolume(value / 100);
+                      audio.setSfxVolume(value / 100);
                     }}
-                    onValueCommit={() => playSound('buttonClick')}
+                    onValueCommit={() => audio.playSound('buttonClick')}
                     max={100}
                     step={5}
                     className="w-full"
@@ -154,25 +127,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <div className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MusicalNoteIcon className={cn("w-5 h-5", musicEnabled ? "text-primary" : "text-muted-foreground")} />
+                  <MusicalNoteIcon className={cn("w-5 h-5", audio.musicEnabled ? "text-primary" : "text-muted-foreground")} />
                   <span className="text-sm font-medium">Music</span>
                 </div>
                 <Switch
-                  checked={musicEnabled}
-                  onCheckedChange={setMusicEnabled}
+                  checked={audio.musicEnabled}
+                  onCheckedChange={audio.setMusicEnabled}
                 />
               </div>
-              {musicEnabled && (
+              {audio.musicEnabled && (
                 <div className="pl-7">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-muted-foreground">Volume</span>
                     <span className="text-xs text-muted-foreground">
-                      {Math.round(musicVolume * 100)}%
+                      {Math.round(audio.musicVolume * 100)}%
                     </span>
                   </div>
                   <Slider
-                    value={[musicVolume * 100]}
-                    onValueChange={([value]) => setMusicVolume(value / 100)}
+                    value={[audio.musicVolume * 100]}
+                    onValueChange={([value]) => audio.setMusicVolume(value / 100)}
                     max={100}
                     step={5}
                     className="w-full"
@@ -192,10 +165,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               {themes.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => {
-                    setTheme(t.id);
-                    playSound('buttonClick');
-                  }}
+                    onClick={() => {
+                      setTheme(t.id);
+                      audio.playSound('buttonClick');
+                    }}
                   className={cn(
                     "flex items-center justify-center gap-2 p-3 rounded-lg border transition-all",
                     theme === t.id
