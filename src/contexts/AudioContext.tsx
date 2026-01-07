@@ -497,6 +497,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const audioCtxRef = useRef<AudioContext | null>(globalAudioContext);
   const musicRef = useRef<BackgroundMusic | null>(null);
   const pendingSoundsRef = useRef<SoundType[]>([]);
+  const pendingMusicStartRef = useRef(false);
 
   useEffect(() => {
     const checkUnlockState = () => {
@@ -607,6 +608,31 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings.musicEnabled, isMusicPlaying]);
 
+  // If music was requested before audio was unlocked, start it right after unlock
+  useEffect(() => {
+    if (!pendingMusicStartRef.current) return;
+    if (!settings.musicEnabled) {
+      pendingMusicStartRef.current = false;
+      return;
+    }
+    if (!isAudioUnlocked) return;
+    if (isMusicPlaying) {
+      pendingMusicStartRef.current = false;
+      return;
+    }
+
+    const ctx = ensureAudioContext();
+    if (ctx.state !== 'running') return;
+
+    pendingMusicStartRef.current = false;
+    setIsMusicLoading(true);
+
+    Promise.resolve(musicRef.current?.start(settings.musicVolume))
+      .then(() => setIsMusicPlaying(true))
+      .catch((err) => console.error('[Audio] Deferred music start failed:', err))
+      .finally(() => setIsMusicLoading(false));
+  }, [isAudioUnlocked, isMusicPlaying, settings.musicEnabled, settings.musicVolume, ensureAudioContext]);
+
   // Internal sound player (doesn't check state, assumes running)
   const playSoundInternal = (ctx: AudioContext, soundType: SoundType, volume: number) => {
     switch (soundType) {
@@ -650,26 +676,27 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     console.log('[Audio] startMusic called, musicEnabled:', settings.musicEnabled);
     if (!settings.musicEnabled) return;
 
-    // Ensure SDK init + AudioContext resume follows CrazyGames requirements
+    // Ensure SDK init + AudioContext resume follows platform requirements.
+    // If this is called before a user gesture, we defer and start after unlock.
     const unlocked = await globalUnlockAudio();
     if (!unlocked) {
-      console.log('[Audio] startMusic aborted - audio unlock failed');
+      pendingMusicStartRef.current = true;
+      console.log('[Audio] startMusic deferred - audio not unlocked yet');
       return;
     }
 
     const ctx = ensureAudioContext();
     console.log('[Audio] AudioContext state:', ctx.state);
-    console.log('AudioContext state:', ctx.state);
 
     if (ctx.state !== 'running') {
-      console.log('[Audio] startMusic aborted - AudioContext not running');
+      pendingMusicStartRef.current = true;
+      console.log('[Audio] startMusic deferred - AudioContext not running');
       return;
     }
 
     setIsAudioUnlocked(true);
     setIsMusicLoading(true);
     try {
-      // Only set music volume (master volume is handled by global master gain)
       const volume = settings.musicVolume;
       console.log('[Audio] Starting music with volume:', volume);
       await musicRef.current?.start(volume);
@@ -680,7 +707,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsMusicLoading(false);
     }
-  }, [settings.musicEnabled, settings.masterVolume, settings.musicVolume, ensureAudioContext]);
+  }, [settings.musicEnabled, settings.musicVolume, ensureAudioContext]);
 
   const stopMusic = useCallback(() => {
     musicRef.current?.stop();
