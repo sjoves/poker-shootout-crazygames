@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { POWER_UPS, RewardTier } from '@/types/game';
@@ -18,12 +18,12 @@ interface LootBoxRevealProps {
 
 type RevealPhase = 'closed' | 'shaking' | 'opening' | 'revealed';
 
-export function LootBoxReveal({
+export const LootBoxReveal = forwardRef<HTMLDivElement, LootBoxRevealProps>(function LootBoxReveal({
   isOpen,
   powerUpId,
   tier,
   onClaim,
-}: LootBoxRevealProps) {
+}, ref) {
   const [phase, setPhase] = useState<RevealPhase>('closed');
 
   const powerUp = powerUpId ? POWER_UPS.find(p => p.id === powerUpId) : null;
@@ -50,6 +50,7 @@ export function LootBoxReveal({
   return (
     <AnimatePresence>
       <motion.div
+        ref={ref}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -201,4 +202,4 @@ export function LootBoxReveal({
       </motion.div>
     </AnimatePresence>
   );
-}
+});
