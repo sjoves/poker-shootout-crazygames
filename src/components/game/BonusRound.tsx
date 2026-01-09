@@ -67,9 +67,9 @@ export function BonusRound({
   // First bonus round: 10 cards (2x5), then 20, max 24
   const effectiveBonusRound = Math.max(bonusRoundNumber, 1);
   const cardCount = Math.min(effectiveBonusRound * 10, 24);
-  // First bonus round uses 5 columns for 2x5 grid; others use standard grid
+  // First bonus round uses 5 columns for 2x5 grid; others use 4 on mobile (same as SD), 6 on desktop
   const isFirstBonusRound = effectiveBonusRound === 1;
-  const gridCols = isFirstBonusRound ? 5 : (isMobile ? 5 : 6);
+  const gridCols = isFirstBonusRound ? (isMobile ? 4 : 5) : (isMobile ? 4 : 6);
   // Card size matches StaticGrid: sdm on mobile, sd on desktop
   const cardSize = isMobile ? 'sdm' : 'sd';
 
@@ -237,12 +237,12 @@ export function BonusRound({
       />
 
       {/* Cards Grid */}
-      <div className="flex-1 flex items-center justify-center overflow-auto px-2 sm:px-4 md:px-6 lg:px-8">
+      <div className={`flex-1 flex items-center justify-center overflow-auto px-2 sm:px-4 md:px-6 lg:px-8 ${isMobile ? '-mt-[35px]' : ''}`}>
         <div 
           className="grid w-full max-w-2xl lg:max-w-3xl mx-auto justify-center"
           style={{
             gridTemplateColumns: `repeat(${gridCols}, auto)`,
-            gap: isMobile ? '0.5rem' : '0.75rem',
+            gap: isMobile ? '0.525rem' : '0.75rem',
           }}
         >
           {deck.slice(0, cardCount).map((card) => (
