@@ -98,8 +98,8 @@ export function ConveyorBelt({
     // Maintain aspect ratio
     const cardWidth = cardHeight * CARD_ASPECT_RATIO;
     
-    // Spacing scales with card size
-    const spacing = isFullScreen ? cardWidth * 0.4 : (isMobile ? cardWidth * 0.5 : cardWidth * 0.35);
+    // Spacing scales with card size - increased to reduce overlap
+    const spacing = isFullScreen ? cardWidth * 0.7 : (isMobile ? cardWidth * 0.8 : cardWidth * 0.6);
     
     return { cardWidth, cardHeight, spacing, rowGap };
   }, [isMobile]);
