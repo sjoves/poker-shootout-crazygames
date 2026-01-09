@@ -409,4 +409,30 @@
   .rotate-y-180 {
     transform: rotateY(180deg);
   }
+
+  /* CrazyGames 16:9 responsive scaling - ensures UI legibility across devicePixelRatio */
+  .game-container {
+    /* Use viewport units for consistent scaling */
+    font-size: clamp(12px, 1.5vw, 18px);
+    /* Ensure crisp rendering on high DPI displays */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Ensure game fills viewport properly at 16:9 */
+  @media (min-aspect-ratio: 16/9) {
+    .game-container {
+      max-height: 100vh;
+      width: calc(100vh * 16 / 9);
+      margin: 0 auto;
+    }
+  }
+
+  @media (max-aspect-ratio: 16/9) {
+    .game-container {
+      max-width: 100vw;
+      height: calc(100vw * 9 / 16);
+    }
+  }
 }
