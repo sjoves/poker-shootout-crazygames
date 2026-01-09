@@ -66,7 +66,7 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   );
 
   return (
-    <div className={`absolute inset-0 flex items-center justify-center px-2 sm:px-4 md:px-6 lg:px-8 ${isMobile ? '-mt-5' : ''}`}>
+    <div className={`absolute inset-0 flex items-center justify-center px-2 sm:px-4 md:px-6 lg:px-8 ${isMobile ? '-mt-[35px]' : ''}`}>
       <div
         className="grid w-full max-w-2xl lg:max-w-3xl justify-center"
         style={{
