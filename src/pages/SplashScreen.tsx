@@ -119,7 +119,7 @@ export default function SplashScreen() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center mb-6"
       >
-        <img src={currentLogo} alt="Poker Shootout" className="w-[22rem] md:w-[26.4rem] mx-auto mb-4" />
+        <img src={currentLogo} alt="Poker Shootout" className="w-[22rem] md:w-[21.1rem] mx-auto mb-4" />
         {isPremium && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
