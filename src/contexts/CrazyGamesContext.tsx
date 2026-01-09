@@ -1,11 +1,14 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 
-// Sitelock whitelist - domains where the game is allowed to run
-const ALLOWED_ORIGINS = ['crazygames.com', 'bi0s.art', 'localhost', 'lovable.app', 'lovableproject.com'];
-
+// Sitelock - check if origin ends with allowed domain or is localhost
 function isAllowedOrigin(): boolean {
-  const origin = window.location.origin.toLowerCase();
-  return ALLOWED_ORIGINS.some(domain => origin.includes(domain));
+  const hostname = window.location.hostname.toLowerCase();
+  // CrazyGames requirement: must end with 'crazygames.com' OR be 'localhost'
+  // Also allow dev/preview domains for development
+  return hostname.endsWith('crazygames.com') || 
+         hostname === 'localhost' || 
+         hostname.endsWith('lovable.app') || 
+         hostname.endsWith('lovableproject.com');
 }
 
 // CrazyGames SDK types
@@ -89,7 +92,7 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CrazyGamesUser | null>(null);
   const [hasAdblock, setHasAdblock] = useState(false);
 
-  // Input protection: prevent scrolling on arrow keys and spacebar
+  // Input protection: prevent scrolling on arrow keys, spacebar, and wheel
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (BLOCKED_KEYS.includes(e.key) || BLOCKED_KEYS.includes(e.code)) {
@@ -101,8 +104,24 @@ export function CrazyGamesProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Prevent unwanted page scroll from mouse wheel
+    const handleWheel = (e: WheelEvent) => {
+      // Prevent wheel scroll on the document level to avoid page scrolling
+      // Allow scrolling inside specific scrollable containers if needed
+      const target = e.target as HTMLElement;
+      const isScrollableContainer = target.closest('[data-allow-scroll]');
+      if (!isScrollableContainer) {
+        e.preventDefault();
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown, { passive: false });
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('wheel', handleWheel);
+    };
   }, []);
 
   useEffect(() => {
