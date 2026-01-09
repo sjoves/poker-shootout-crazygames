@@ -19,7 +19,7 @@ import {
   Star,
   ArrowRight
 } from 'lucide-react';
-import { POKER_HANDS, Card as CardType } from '@/types/game';
+import { POKER_HANDS, Card as CardType, Rank, Suit as SuitType } from '@/types/game';
 import { PlayingCard, EmptyCardSlot } from '@/components/game/PlayingCard';
 import { TutorialCard } from '@/components/tutorial/TutorialCard';
 import { evaluateHand } from '@/lib/pokerEngine';
@@ -103,18 +103,87 @@ const EXAMPLE_HANDS: Record<string, CardType[]> = {
   ],
 };
 
-// Cards for guided interactive demo - setup for a flush (6 cards in single row)
-const GUIDED_DEMO_CARDS: CardType[] = [
-  { id: '7-hearts', suit: 'hearts', rank: '7', value: 7 },
-  { id: '3-hearts', suit: 'hearts', rank: '3', value: 3 },
-  { id: 'J-hearts', suit: 'hearts', rank: 'J', value: 11 },
-  { id: 'A-hearts', suit: 'hearts', rank: 'A', value: 14 },
-  { id: '2-hearts', suit: 'hearts', rank: '2', value: 2 },
-  { id: '10-hearts', suit: 'hearts', rank: '10', value: 10 },
-];
+// Hand templates for tutorial variety
+const SUITS: SuitType[] = ['hearts', 'diamonds', 'clubs', 'spades'];
+const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+const RANK_VALUES: Record<Rank, number> = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
 
-// Target cards for guided selection (hearts for flush)
-const GUIDED_TARGET_IDS = ['7-hearts', '3-hearts', 'J-hearts', 'A-hearts', '2-hearts'];
+function createCard(rank: Rank, suit: SuitType): CardType {
+  return { id: `${rank}-${suit}`, suit, rank, value: RANK_VALUES[rank] };
+}
+
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Generate random tutorial cards with a guaranteed hand possibility
+function generateTutorialCards(): { cards: CardType[], hint: string } {
+  const handTypes = ['flush', 'straight', 'three_of_kind', 'two_pair', 'pair'];
+  const handType = handTypes[Math.floor(Math.random() * handTypes.length)];
+  
+  const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
+  const otherSuits = SUITS.filter(s => s !== suit);
+  
+  let cards: CardType[] = [];
+  let hint = '';
+  
+  switch (handType) {
+    case 'flush': {
+      // 5+ cards of same suit
+      const flushRanks = shuffleArray(RANKS).slice(0, 6);
+      cards = flushRanks.map(r => createCard(r, suit));
+      hint = `Select 5 ${suit} for a Flush!`;
+      break;
+    }
+    case 'straight': {
+      // Sequential cards
+      const startIdx = Math.floor(Math.random() * 8); // 0-7 to allow 5+ sequential
+      const straightRanks = RANKS.slice(startIdx, startIdx + 6);
+      cards = straightRanks.map((r, i) => createCard(r, SUITS[i % 4]));
+      hint = `Build a Straight with sequential cards!`;
+      break;
+    }
+    case 'three_of_kind': {
+      // 3 of same rank + 3 random
+      const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+      const tripSuits = shuffleArray(SUITS).slice(0, 3);
+      cards = tripSuits.map(s => createCard(rank, s));
+      const otherRanks = shuffleArray(RANKS.filter(r => r !== rank)).slice(0, 3);
+      cards.push(...otherRanks.map((r, i) => createCard(r, SUITS[i % 4])));
+      hint = `Find Three of a Kind (three ${rank}s)!`;
+      break;
+    }
+    case 'two_pair': {
+      // 2 pairs + 2 random
+      const pairRanks = shuffleArray(RANKS).slice(0, 2);
+      cards = [
+        createCard(pairRanks[0], 'hearts'), createCard(pairRanks[0], 'diamonds'),
+        createCard(pairRanks[1], 'clubs'), createCard(pairRanks[1], 'spades'),
+      ];
+      const otherRanks = shuffleArray(RANKS.filter(r => !pairRanks.includes(r))).slice(0, 2);
+      cards.push(...otherRanks.map((r, i) => createCard(r, SUITS[i])));
+      hint = `Make Two Pair (${pairRanks[0]}s and ${pairRanks[1]}s)!`;
+      break;
+    }
+    case 'pair': {
+      // 1 pair + 4 random
+      const pairRank = RANKS[Math.floor(Math.random() * RANKS.length)];
+      const pairSuits = shuffleArray(SUITS).slice(0, 2);
+      cards = pairSuits.map(s => createCard(pairRank, s));
+      const otherRanks = shuffleArray(RANKS.filter(r => r !== pairRank)).slice(0, 4);
+      cards.push(...otherRanks.map((r, i) => createCard(r, SUITS[i % 4])));
+      hint = `Find a Pair of ${pairRank}s!`;
+      break;
+    }
+  }
+  
+  return { cards: shuffleArray(cards).slice(0, 6), hint };
+}
 
 interface TutorialStep {
   id: string;
@@ -159,36 +228,24 @@ function HandPointer({ targetIndex, isVisible }: { targetIndex: number; isVisibl
 
 // Guided Interactive Demo Component
 function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
-  const [availableCards, setAvailableCards] = useState<CardType[]>(GUIDED_DEMO_CARDS);
+  const [tutorialData, setTutorialData] = useState(() => generateTutorialCards());
+  const [availableCards, setAvailableCards] = useState<CardType[]>(tutorialData.cards);
   const [selectedCards, setSelectedCards] = useState<CardType[]>([]);
-  const [showHandPointer, setShowHandPointer] = useState(true);
-  const [currentTargetIndex, setCurrentTargetIndex] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const [handResult, setHandResult] = useState<{ name: string; points: number } | null>(null);
-
-  // Get current target card
-  const currentTargetId = GUIDED_TARGET_IDS[selectedCards.length];
-  const targetCardIndex = availableCards.findIndex(c => c.id === currentTargetId);
 
   const handleCardClick = (card: CardType) => {
     if (selectedCards.length >= 5) return;
     
-    // Check if it's a target card (hint system - allow any card but highlight targets)
-    const isTarget = GUIDED_TARGET_IDS.includes(card.id);
-    
     setSelectedCards(prev => [...prev, card]);
     setAvailableCards(prev => prev.filter(c => c.id !== card.id));
-    
-    if (selectedCards.length < 4) {
-      setCurrentTargetIndex(prev => prev + 1);
-    }
   };
 
   const handleReset = () => {
-    setAvailableCards(GUIDED_DEMO_CARDS);
+    const newData = generateTutorialCards();
+    setTutorialData(newData);
+    setAvailableCards(newData.cards);
     setSelectedCards([]);
-    setShowHandPointer(true);
-    setCurrentTargetIndex(0);
     setShowSuccess(false);
     setHandResult(null);
   };
@@ -196,7 +253,6 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
   // Evaluate hand when 5 cards selected
   useEffect(() => {
     if (selectedCards.length === 5) {
-      setShowHandPointer(false);
       const result = evaluateHand(selectedCards);
       setHandResult({ name: result.hand.name, points: result.totalPoints });
       setShowSuccess(true);
@@ -221,7 +277,7 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
             <>
               👆 Tap 5 cards to build a poker hand!
               <span className="block text-xs text-primary/70">
-                Hint: Select the hearts for a Flush!
+                {tutorialData.hint}
               </span>
             </>
           )}
@@ -234,36 +290,21 @@ function GuidedInteractiveDemo({ onComplete }: { onComplete: () => void }) {
           TAP CARDS TO SELECT
         </p>
         <div className="flex justify-center gap-0.5">
-          {availableCards.map((card, index) => {
-            const isTarget = card.id === currentTargetId;
-            return (
-              <motion.div
-                key={card.id}
-                className="relative"
-                animate={isTarget && showHandPointer ? {
-                  scale: [1, 1.08, 1],
-                } : {}}
-                transition={{ repeat: Infinity, duration: 0.8 }}
-              >
-                <PlayingCard
-                  card={card}
-                  size="xxs"
-                  onClick={() => handleCardClick(card)}
-                  animate={false}
-                  className={isTarget && showHandPointer ? 'ring-2 ring-primary ring-offset-1 ring-offset-background' : ''}
-                />
-                {isTarget && showHandPointer && (
-                  <motion.div
-                    className="absolute -top-5 left-1/2 -translate-x-1/2"
-                    animate={{ y: [0, 3, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.5 }}
-                  >
-                    <Hand className="w-4 h-4 text-primary rotate-180" />
-                  </motion.div>
-                )}
-              </motion.div>
-            );
-          })}
+          {availableCards.map((card) => (
+            <motion.div
+              key={card.id}
+              className="relative"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <PlayingCard
+                card={card}
+                size="xxs"
+                onClick={() => handleCardClick(card)}
+                animate={false}
+              />
+            </motion.div>
+          ))}
         </div>
       </div>
 
