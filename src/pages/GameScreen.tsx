@@ -471,21 +471,46 @@ export default function GameScreen() {
               )}
             </AnimatePresence>
 
-            {/* Final Stretch Bonus Indicator - Overlay on scoreboard, fades after 0.5s */}
+            {/* Final Stretch Bonus Indicator - Overlay on scoreboard, shows for 1s then fades over 1s */}
             <AnimatePresence>
               {inFinalStretch && (
                 <motion.div
                   key="bonus-overlay"
-                  initial={{ opacity: 1, scale: 1.2 }}
-                  animate={{ opacity: 0, scale: 1 }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                  animate={{ 
+                    opacity: [0, 1, 1, 0],
+                    scale: [0.5, 1.3, 1.1, 1],
+                    rotate: [-10, 5, 0, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    times: [0, 0.15, 0.5, 1],
+                    ease: 'easeOut'
+                  }}
                   className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
                 >
-                  <div className="flex items-center gap-2 bg-primary/90 rounded-full px-6 py-3 font-display text-lg font-bold text-primary-foreground shadow-lg">
-                    <BoltIcon className="w-5 h-5" />
+                  <motion.div 
+                    animate={{ 
+                      scale: [1, 1.08, 1],
+                      filter: ['brightness(1)', 'brightness(1.3)', 'brightness(1)']
+                    }}
+                    transition={{ duration: 0.4, repeat: 3, ease: 'easeInOut' }}
+                    className="flex items-center gap-3 bg-gradient-to-r from-primary via-accent to-primary rounded-full px-8 py-4 font-display text-xl font-bold text-primary-foreground shadow-[0_0_30px_rgba(var(--primary),0.6)]"
+                  >
+                    <motion.div
+                      animate={{ rotate: [0, 15, -15, 0] }}
+                      transition={{ duration: 0.3, repeat: 4, ease: 'easeInOut' }}
+                    >
+                      <BoltIcon className="w-6 h-6" />
+                    </motion.div>
                     BONUS x2
-                    <BoltIcon className="w-5 h-5" />
-                  </div>
+                    <motion.div
+                      animate={{ rotate: [0, -15, 15, 0] }}
+                      transition={{ duration: 0.3, repeat: 4, ease: 'easeInOut' }}
+                    >
+                      <BoltIcon className="w-6 h-6" />
+                    </motion.div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
