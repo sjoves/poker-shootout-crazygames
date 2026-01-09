@@ -46,11 +46,11 @@ export function StaticGrid({ deck, selectedCardIds, onSelectCard }: StaticGridPr
   const isMobile = useIsMobile();
   const { playSound } = useAudio();
 
-  // 5 columns on mobile (3 rows), 7 on desktop (3 rows)
-  const gridColumns = isMobile ? 5 : 7;
-  const maxVisibleCards = isMobile ? 15 : 21; // 5x3 on mobile, 7x3 on desktop
+  // 4 columns on mobile (4 rows = 16 cards), 7 on desktop (3 rows)
+  const gridColumns = isMobile ? 4 : 7;
+  const maxVisibleCards = isMobile ? 16 : 21; // 4x4 on mobile, 7x3 on desktop
   const visibleCards = deck.slice(0, maxVisibleCards);
-  const cardSize = isMobile ? 'sdm-lg' : 'sd'; // sdm-lg is larger for 3-row layout
+  const cardSize = isMobile ? 'sdm' : 'sd'; // sdm for 4-row layout on mobile
 
   // Simple handler - let the store handle all validation
   const handleCardPointerDown = useCallback(
