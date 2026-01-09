@@ -471,25 +471,21 @@ export default function GameScreen() {
               )}
             </AnimatePresence>
 
-            {/* Final Stretch Bonus Indicator */}
+            {/* Final Stretch Bonus Indicator - Overlay on scoreboard, fades after 0.5s */}
             <AnimatePresence>
               {inFinalStretch && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute top-20 left-1/2 -translate-x-1/2 z-40"
+                  key="bonus-overlay"
+                  initial={{ opacity: 1, scale: 1.2 }}
+                  animate={{ opacity: 0, scale: 1 }}
+                  transition={{ duration: 0.5, ease: 'easeOut' }}
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-[60] pointer-events-none"
                 >
-                  <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
-                    className="flex items-center gap-2 font-display text-lg font-bold text-primary"
-                  >
+                  <div className="flex items-center gap-2 bg-primary/90 rounded-full px-6 py-3 font-display text-lg font-bold text-primary-foreground shadow-lg">
                     <BoltIcon className="w-5 h-5" />
                     BONUS x2
                     <BoltIcon className="w-5 h-5" />
-                  </motion.div>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
