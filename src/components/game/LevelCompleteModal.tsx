@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StarIcon, TrophyIcon } from '@heroicons/react/24/solid';
+import { StarIcon, TrophyIcon, GiftIcon, SparklesIcon, FaceFrownIcon } from '@heroicons/react/24/solid';
 import { StarIcon as StarOutlineIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { useCrazyGames } from '@/contexts/CrazyGamesContext';
@@ -103,15 +103,15 @@ export function LevelCompleteModal({
             >
               {isBonusFailed ? (
                 <div className="w-16 h-16 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
-                  <span className="text-4xl">😅</span>
+                  <FaceFrownIcon className="w-10 h-10 text-muted-foreground" />
                 </div>
               ) : isBonusRound ? (
                 <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center">
-                  <span className="text-4xl">🎁</span>
+                  <GiftIcon className="w-10 h-10 text-accent" />
                 </div>
               ) : pendingBonusRound ? (
                 <div className="w-16 h-16 mx-auto bg-accent/20 rounded-full flex items-center justify-center">
-                  <span className="text-4xl">🎉</span>
+                  <SparklesIcon className="w-10 h-10 text-accent" />
                 </div>
               ) : (
                 <TrophyIcon className="w-16 h-16 text-primary mx-auto" />
