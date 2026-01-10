@@ -13,12 +13,14 @@ interface FlippableCardProps {
   onKeep: (card: Card) => void;
   onUnkeep: (card: Card) => void;
   disabled?: boolean;
-  size?: 'sm' | 'sdm' | 'sd';
+  size?: 'sm' | 'sdm' | 'sdm-lg' | 'sd';
 }
 
 const SIZE_CLASSES = {
   sm: { card: 'w-[40px] h-[57px]', rank: 'text-base font-black', corner: 'text-xs' },
   sdm: { card: 'w-[50px] h-[71px]', rank: 'text-lg font-black', corner: 'text-sm' },
+  // 20% larger than sdm for mobile bonus round (5x4 grid)
+  'sdm-lg': { card: 'w-[60px] h-[85px]', rank: 'text-xl font-black', corner: 'text-base' },
   sd: { card: 'w-[60px] h-[85px]', rank: 'text-lg font-black', corner: 'text-sm' },
 };
 
