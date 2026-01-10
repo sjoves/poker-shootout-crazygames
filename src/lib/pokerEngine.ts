@@ -11,7 +11,7 @@ import { Card, HandResult, POKER_HANDS, RANK_VALUES, Rank, Suit, SUITS, RANKS } 
 
 // Precomputed straight patterns (bitmasks for A-5, 2-6, 3-7, ..., 10-A)
 const STRAIGHT_PATTERNS = [
-  0b1111000000001, // A-2-3-4-5 (wheel)
+  0b1000000001111, // A-2-3-4-5 (wheel) - A=bit12, 2=bit0, 3=bit1, 4=bit2, 5=bit3
   0b0000000011111, // 2-3-4-5-6
   0b0000000111110, // 3-4-5-6-7
   0b0000001111100, // 4-5-6-7-8
