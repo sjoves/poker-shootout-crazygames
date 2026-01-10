@@ -18,10 +18,10 @@ interface FlippableCardProps {
 
 const SIZE_CLASSES = {
   sm: { card: 'w-[40px] h-[57px]', rank: 'text-base font-black', corner: 'text-xs' },
-  sdm: { card: 'w-[50px] h-[71px]', rank: 'text-lg font-black', corner: 'text-sm' },
-  // 20% larger than sdm for mobile bonus round (5x4 grid)
-  'sdm-lg': { card: 'w-[60px] h-[85px]', rank: 'text-xl font-black', corner: 'text-base' },
-  sd: { card: 'w-[60px] h-[85px]', rank: 'text-lg font-black', corner: 'text-sm' },
+  // Use vh-based sizing to match PlayingCard (SD mode)
+  sdm: { card: 'w-[calc(14.96vh*0.714)] h-[14.96vh]', rank: 'text-lg font-black', corner: 'text-sm' },
+  'sdm-lg': { card: 'w-[calc(16vh*0.714)] h-[16vh]', rank: 'text-xl font-black', corner: 'text-base' },
+  sd: { card: 'w-[calc(17vh*0.714)] h-[17vh]', rank: 'text-2xl font-black', corner: 'text-lg' },
 };
 
 const SUIT_SYMBOLS: Record<Suit, string> = {
