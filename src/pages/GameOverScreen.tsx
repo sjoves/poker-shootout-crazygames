@@ -349,6 +349,7 @@ export default function GameOverScreen() {
         )}
 
         <div className="flex flex-col gap-3 w-full max-w-md mx-auto">
+          {/* Leaderboard button hidden for now
           <Button 
             onClick={() => navigate('/leaderboard')} 
             variant="outline" 
@@ -358,6 +359,7 @@ export default function GameOverScreen() {
             <Award className="w-5 h-5 text-primary" />
             View Leaderboard
           </Button>
+          */}
           
           {/* SSC Mode: Replay This Level option */}
           {isSSC && gameState.sscLevel > 1 && (
