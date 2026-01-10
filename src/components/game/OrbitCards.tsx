@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAudio } from '@/contexts/AudioContext';
 import { Card } from '@/types/game';
 import { PlayingCard } from './PlayingCard';
+
 interface OrbitSlot {
   ring: 0 | 1 | 2;
   slotIndex: number;
@@ -24,44 +25,6 @@ interface OrbitCardsProps {
   showRingGuides?: boolean;
   baseRotationSpeed?: number;
 }
-
-// Memoized card wrapper with will-change optimization
-const OrbitCardWrapper = React.memo(function OrbitCardWrapper({
-  x,
-  y,
-  isNew,
-  children,
-  cardId,
-  onClick,
-}: {
-  x: number;
-  y: number;
-  isNew: boolean;
-  children: React.ReactNode;
-  cardId: string;
-  onClick: () => void;
-}) {
-  return (
-    <motion.div
-      key={cardId}
-      initial={isNew ? { x: 0, y: 0, scale: 0, opacity: 0 } : false}
-      animate={{ x, y, scale: 1, opacity: 1 }}
-      exit={{ opacity: 0, scale: 0, transition: { duration: 0.2 } }}
-      transition={{ type: 'spring', stiffness: 70, damping: 15, mass: 1 }}
-      className="absolute top-1/2 left-1/2 cursor-pointer z-20"
-      style={{
-        marginLeft: '-28px',
-        marginTop: '-40px',
-        willChange: 'transform',
-      }}
-      onClick={onClick}
-      whileHover={{ scale: 1.1, zIndex: 30 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      {children}
-    </motion.div>
-  );
-});
 
 export function OrbitCards({
   deck,
@@ -252,8 +215,8 @@ export function OrbitCards({
   const handleCardClick = useCallback(
     (slot: OrbitSlot) => {
       playSound('cardSelect');
-      onSelectCard(slot.card);
-
+      
+      // First update slots to replace the card, THEN call onSelectCard
       setSlots(prev => {
         const next = prev.map(s => {
           if (s.card.id !== slot.card.id) return s;
@@ -265,6 +228,7 @@ export function OrbitCards({
 
           const forbidden = new Set<string>([
             ...selectedCardIds,
+            slot.card.id, // Include the card being selected
             ...prev.map(p => p.card.id).filter(id => id !== slot.card.id)
           ]);
           
@@ -295,6 +259,9 @@ export function OrbitCards({
         setHiddenDeckCount(hiddenDeckRef.current.length);
         return deduped;
       });
+      
+      // Call onSelectCard after updating slots
+      onSelectCard(slot.card);
     },
     [onSelectCard, playSound, selectedCardIds]
   );
@@ -363,8 +330,8 @@ export function OrbitCards({
           </div>
         )}
 
-        {/* Cards */}
-        <AnimatePresence mode="popLayout">
+        {/* Cards - use pure DOM for smooth animation, no framer-motion animate */}
+        <AnimatePresence>
           {slots.map((slot) => {
             const isSelected = selectedCardIds.includes(slot.card.id);
             if (isSelected) return null;
@@ -372,23 +339,13 @@ export function OrbitCards({
             const pos = getInitialPosition(slot);
 
             return (
-              <motion.div
+              <div
                 key={slot.card.id}
                 ref={(el) => {
                   if (el) cardElementsRef.current.set(slot.card.id, el);
                   else cardElementsRef.current.delete(slot.card.id);
                 }}
-                initial={slot.isNew ? { scale: 0, opacity: 0 } : false}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.15 } }}
-                transition={{ 
-                  type: 'spring', 
-                  stiffness: 200, 
-                  damping: 20, 
-                  mass: 0.8,
-                  opacity: { duration: 0.2 }
-                }}
-                className="absolute top-1/2 left-1/2 cursor-pointer z-20"
+                className="absolute top-1/2 left-1/2 cursor-pointer z-20 hover:scale-110 hover:z-30 active:scale-95 transition-[scale] duration-100"
                 style={{
                   marginLeft: '-28px',
                   marginTop: '-40px',
@@ -396,15 +353,23 @@ export function OrbitCards({
                   willChange: 'transform',
                 }}
                 onClick={() => handleCardClick(slot)}
-                whileHover={{ scale: 1.1, zIndex: 30 }}
-                whileTap={{ scale: 0.95 }}
               >
-                <PlayingCard
-                  card={slot.card}
-                  size="sm"
-                  className="shadow-lg hover:shadow-xl transition-shadow"
-                />
-              </motion.div>
+                <motion.div
+                  initial={slot.isNew ? { scale: 0, opacity: 0 } : false}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ 
+                    type: 'spring', 
+                    stiffness: 300, 
+                    damping: 25,
+                  }}
+                >
+                  <PlayingCard
+                    card={slot.card}
+                    size="sm"
+                    className="shadow-lg hover:shadow-xl transition-shadow"
+                  />
+                </motion.div>
+              </div>
             );
           })}
         </AnimatePresence>
