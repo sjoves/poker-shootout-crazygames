@@ -102,6 +102,10 @@ export function OrbitCards({
   const ringSpeedMultipliers = useMemo(() => [0.4, 0.5, 0.6] as const, []);
   const totalOrbitCards = 25;
 
+  // Detect mobile for reduced breathing
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const effectiveBreathingAmplitude = isMobile ? Math.min(breathingAmplitude, 20) : breathingAmplitude;
+
   // Speed scales with level > 10
   const effectiveSpeed = useMemo(() => {
     const levelMultiplier = level > 10 ? 1 + (level - 10) * 0.005 : 1;
@@ -172,7 +176,7 @@ export function OrbitCards({
       
       const phaseOffset = slot.ring * 0.3;
       const breathOffset = breathingEnabled 
-        ? Math.sin(time * breathingSpeed + phaseOffset) * breathingAmplitude 
+        ? Math.sin(time * breathingSpeed + phaseOffset) * effectiveBreathingAmplitude 
         : 0;
       const radius = baseRadius + breathOffset;
 
@@ -186,10 +190,26 @@ export function OrbitCards({
         y: Math.sin(angle) * radius,
       };
     },
-    [baseRadii, breathingAmplitude, breathingEnabled, breathingSpeed, effectiveSpeed, ringSpeedMultipliers]
+    [baseRadii, effectiveBreathingAmplitude, breathingEnabled, breathingSpeed, effectiveSpeed, ringSpeedMultipliers]
   );
 
-  // Global rAF loop - direct DOM updates
+  // Store slots in ref for rAF access without re-creating effect
+  const slotsRef = useRef(slots);
+  useEffect(() => {
+    slotsRef.current = slots;
+  }, [slots]);
+
+  const selectedCardIdsRef = useRef(selectedCardIds);
+  useEffect(() => {
+    selectedCardIdsRef.current = selectedCardIds;
+  }, [selectedCardIds]);
+
+  const calculatePositionRef = useRef(calculatePosition);
+  useEffect(() => {
+    calculatePositionRef.current = calculatePosition;
+  }, [calculatePosition]);
+
+  // Global rAF loop - direct DOM updates, stable effect
   useEffect(() => {
     if (isPaused) return;
 
@@ -200,14 +220,17 @@ export function OrbitCards({
       globalTimeRef.current += dt;
       
       const time = globalTimeRef.current;
+      const currentSlots = slotsRef.current;
+      const currentSelectedIds = selectedCardIdsRef.current;
+      const calcPos = calculatePositionRef.current;
       
-      // Update each card's position directly via DOM
-      for (const slot of slots) {
-        if (selectedCardIds.includes(slot.card.id)) continue;
+      // Update each card's position directly via DOM - continuous animation
+      for (const slot of currentSlots) {
+        if (currentSelectedIds.includes(slot.card.id)) continue;
         
         const element = cardElementsRef.current.get(slot.card.id);
         if (element) {
-          const pos = calculatePosition(slot, time);
+          const pos = calcPos(slot, time);
           element.style.transform = `translate3d(${pos.x}px, ${pos.y}px, 0)`;
         }
       }
@@ -220,7 +243,7 @@ export function OrbitCards({
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [isPaused, slots, selectedCardIds, calculatePosition]);
+  }, [isPaused]); // Only depend on isPaused - use refs for everything else
 
   useEffect(() => {
     if (isPaused) lastTimeRef.current = 0;
@@ -302,12 +325,12 @@ export function OrbitCards({
       const time = globalTimeRef.current;
       setCurrentRadii(baseRadii.map((base, idx) => {
         const phaseOffset = idx * 0.3;
-        return base + Math.sin(time * breathingSpeed + phaseOffset) * breathingAmplitude;
+        return base + Math.sin(time * breathingSpeed + phaseOffset) * effectiveBreathingAmplitude;
       }));
     }, 100);
     
     return () => clearInterval(interval);
-  }, [baseRadii, breathingAmplitude, breathingEnabled, breathingSpeed]);
+  }, [baseRadii, effectiveBreathingAmplitude, breathingEnabled, breathingSpeed]);
 
   // Get initial positions for render
   const getInitialPosition = useCallback((slot: OrbitSlot) => {
@@ -355,10 +378,16 @@ export function OrbitCards({
                   if (el) cardElementsRef.current.set(slot.card.id, el);
                   else cardElementsRef.current.delete(slot.card.id);
                 }}
-                initial={slot.isNew ? { x: 0, y: 0, scale: 0, opacity: 0 } : false}
+                initial={slot.isNew ? { scale: 0, opacity: 0 } : false}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ opacity: 0, scale: 0, transition: { duration: 0.2 } }}
-                transition={{ type: 'spring', stiffness: 70, damping: 15, mass: 1 }}
+                exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.15 } }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 200, 
+                  damping: 20, 
+                  mass: 0.8,
+                  opacity: { duration: 0.2 }
+                }}
                 className="absolute top-1/2 left-1/2 cursor-pointer z-20"
                 style={{
                   marginLeft: '-28px',
