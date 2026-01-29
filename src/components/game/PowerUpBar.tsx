@@ -72,7 +72,7 @@ export function PowerUpBar({
   
   return (
     <ScrollArea className="max-h-48 sm:max-h-64">
-      <div className="flex flex-col gap-1 sm:gap-2 pr-2">
+      <div className="flex flex-col gap-3 sm:gap-4 py-2 pr-2">
         {uniquePowerUpIds.map(powerUpId => {
           const powerUp = POWER_UPS.find(p => p.id === powerUpId);
           if (!powerUp) return null;
@@ -96,7 +96,7 @@ export function PowerUpBar({
                   }}
                   disabled={!isActive}
                   className={cn(
-                    'relative w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center',
+                    'relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center',
                     'border-2 transition-all',
                     isActive && 'border-primary cursor-pointer hover:bg-primary/10',
                     wasUsed && !powerUp.isReusable && 'border-muted-foreground/50 opacity-60 cursor-not-allowed',
@@ -110,15 +110,15 @@ export function PowerUpBar({
                   ) : (
                     <span className="text-base sm:text-xl">{powerUp.emoji}</span>
                   )}
-                  {/* Count badge for multiple power-ups */}
+                  {/* Count badge for multiple power-ups - positioned with more offset */}
                   {count > 1 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center">
+                    <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
                       {count}
                     </span>
                   )}
                 </motion.button>
               </TooltipTrigger>
-              <TooltipContent side="left">
+              <TooltipContent side="left" sideOffset={8}>
                 <p className="font-bold">{powerUp.name} {count > 1 && `(×${count})`}</p>
                 <p className="text-xs text-muted-foreground">{powerUp.description}</p>
                 {wasUsed && !powerUp.isReusable && (
