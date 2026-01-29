@@ -523,7 +523,7 @@ function HandRankingsContent() {
       </div>
 
       {/* Hand selector pills with arrow navigation - fixed layout */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-center gap-2">
         <button
           onClick={handlePrevPage}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
