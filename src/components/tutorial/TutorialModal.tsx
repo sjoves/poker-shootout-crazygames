@@ -538,14 +538,6 @@ function HandRankingsContent() {
             <p className="text-sm text-muted-foreground mt-1">
               {handData[selectedHand].desc}
             </p>
-            <motion.div 
-              className="mt-3 inline-flex items-center gap-2 bg-primary/20 text-primary px-4 py-2 rounded-full font-display text-lg"
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ repeat: Infinity, duration: 2 }}
-            >
-              <Star className="w-4 h-4" />
-              {handData[selectedHand].points} pts
-            </motion.div>
           </div>
 
           {/* Example cards */}
