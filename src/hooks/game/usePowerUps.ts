@@ -28,9 +28,35 @@ function getPowerUpsForTier(tier: RewardTier): string[] {
 }
 
 // Select a random power-up based on bonus round score
+// Higher tiers can also drop lower tier rewards for variety
 export function selectRewardPowerUp(score: number): string | null {
   const tier = getRewardTier(score);
-  const availablePowerUps = getPowerUpsForTier(tier);
+  
+  // Build pool with weighted chances for variety:
+  // - Primary tier: 60% chance
+  // - One tier below: 30% chance  
+  // - Two tiers below: 10% chance (gold only)
+  let availablePowerUps: string[] = [];
+  
+  const roll = Math.random() * 100;
+  
+  if (tier === 'gold') {
+    if (roll < 60) {
+      availablePowerUps = getPowerUpsForTier('gold');
+    } else if (roll < 90) {
+      availablePowerUps = getPowerUpsForTier('silver');
+    } else {
+      availablePowerUps = getPowerUpsForTier('bronze');
+    }
+  } else if (tier === 'silver') {
+    if (roll < 70) {
+      availablePowerUps = getPowerUpsForTier('silver');
+    } else {
+      availablePowerUps = getPowerUpsForTier('bronze');
+    }
+  } else {
+    availablePowerUps = getPowerUpsForTier('bronze');
+  }
   
   if (availablePowerUps.length === 0) return null;
   
