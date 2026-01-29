@@ -229,18 +229,15 @@ export function shuffleDeck(deck: Card[]): Card[] {
   return shuffled;
 }
 
-export function calculateTimeBonus(seconds: number): number {
-  // Classic Mode: 1000 bonus points for 1 minute or under
-  // After 1 minute, deduct 1 point per second
-  if (seconds <= 60) {
-    return 1000;
-  }
-  // Deduct 1 point per second over 60 seconds (can go negative)
-  return -(seconds - 60);
+export function calculateTimePenalty(seconds: number): number {
+  // Classic Mode: Time penalty = seconds × 100
+  return seconds * 100;
 }
 
-export function calculateLeftoverPenalty(cards: Card[]): number {
-  return cards.reduce((sum, card) => sum + card.value * 10, 0);
+export function calculateLeftoverBonus(cards: Card[]): number {
+  // Classic Mode: Sum of card values × 10,000
+  const totalValue = cards.reduce((sum, card) => sum + card.value, 0);
+  return totalValue * 10000;
 }
 
 // SSC Level structure:

@@ -285,21 +285,16 @@ export default function GameOverScreen() {
               <p className="text-sm text-muted-foreground">
                 Base Score: {gameState.rawScore.toLocaleString()}
               </p>
-              {gameState.timeBonus > 0 && (
-                <p className="text-sm text-green-500">
-                  + Time Bonus: {gameState.timeBonus.toLocaleString()}
-                </p>
-              )}
-              {gameState.timeBonus < 0 && (
-                <p className="text-sm text-destructive">
-                  - Time Penalty: {Math.abs(gameState.timeBonus).toLocaleString()}
-                </p>
-              )}
-              {gameState.leftoverPenalty > 0 && (
-                <p className="text-sm text-destructive">
-                  - Leftover Cards: {gameState.leftoverPenalty.toLocaleString()}
-                </p>
-              )}
+              <p className="text-sm text-destructive">
+                − Time Penalty: {gameState.timePenalty.toLocaleString()}
+              </p>
+              <p className="text-sm text-green-500">
+                + Leftover Card Bonus: {gameState.leftoverBonus.toLocaleString()}
+              </p>
+              <div className="border-t border-border my-2" />
+              <p className="text-sm font-medium text-primary">
+                = Final Score: {displayScore.toLocaleString()}
+              </p>
             </>
           )}
           {/* SSC Mode */}

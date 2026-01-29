@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useSyncExternalStore } from 'react';
 import { GameState } from '@/types/game';
-import { calculateTimeBonus, calculateLeftoverPenalty, calculateStarRating, shouldTriggerBonusRound } from '@/lib/pokerEngine';
+import { calculateTimePenalty, calculateLeftoverBonus, calculateStarRating, shouldTriggerBonusRound } from '@/lib/pokerEngine';
 
 // Ref-based timer that doesn't cause re-renders on every tick
 export function useGameTimer(
@@ -117,9 +117,9 @@ export function useGameTimer(
           const isClassic = mode === 'classic_fc' || mode === 'classic_cb';
           
           if (isClassic && timeElapsedRef.current >= 600) {
-            const leftoverPenalty = calculateLeftoverPenalty(deckRef.current);
-            const timeBonus = calculateTimeBonus(600);
-            const finalScore = rawScoreRef.current + timeBonus - leftoverPenalty;
+            const timePenalty = calculateTimePenalty(600);
+            const leftoverBonus = calculateLeftoverBonus(deckRef.current);
+            const finalScore = rawScoreRef.current - timePenalty + leftoverBonus;
             
             setState(prev => ({ 
               ...prev, 
@@ -127,8 +127,8 @@ export function useGameTimer(
               isGameOver: true, 
               isPlaying: false,
               score: finalScore,
-              timeBonus,
-              leftoverPenalty,
+              timePenalty,
+              leftoverBonus,
             }));
           } else {
             // Sync to state every second for precise timer display

@@ -3,8 +3,8 @@ import { GameMode, GameState } from '@/types/game';
 import { 
   createDeck, 
   shuffleDeck, 
-  calculateTimeBonus, 
-  calculateLeftoverPenalty,
+  calculateTimePenalty, 
+  calculateLeftoverBonus,
   calculateLevelGoal,
   getSSCLevelInfo,
   createBonusFriendlyDeck,
@@ -63,23 +63,23 @@ export function useGameControls(
       const isClassic = prev.mode === 'classic_fc' || prev.mode === 'classic_cb';
       
       let finalScore = prev.score;
-      let timeBonus = 0;
-      let leftoverPenalty = 0;
+      let timePenalty = 0;
+      let leftoverBonus = 0;
 
       if (isBlitz) {
         // Blitz: rawScore × handsPlayed
         finalScore = prev.rawScore * prev.handsPlayed;
       } else if (isClassic) {
-        timeBonus = calculateTimeBonus(prev.timeElapsed);
-        leftoverPenalty = calculateLeftoverPenalty(prev.deck);
-        finalScore = prev.rawScore + timeBonus - leftoverPenalty;
+        timePenalty = calculateTimePenalty(prev.timeElapsed);
+        leftoverBonus = calculateLeftoverBonus(prev.deck);
+        finalScore = prev.rawScore - timePenalty + leftoverBonus;
       }
 
       return {
         ...prev,
         score: finalScore,
-        timeBonus,
-        leftoverPenalty,
+        timePenalty,
+        leftoverBonus,
         isPlaying: false,
         isGameOver: true,
       };

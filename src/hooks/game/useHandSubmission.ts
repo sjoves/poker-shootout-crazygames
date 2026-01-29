@@ -2,8 +2,8 @@ import { useCallback, useRef } from 'react';
 import { Card, GameState, HandResult } from '@/types/game';
 import { 
   evaluateHand, 
-  calculateTimeBonus, 
-  calculateLeftoverPenalty,
+  calculateTimePenalty, 
+  calculateLeftoverBonus,
   calculateStarRating,
   shouldTriggerBonusRound,
   getBetterHandMultiplier
@@ -100,18 +100,18 @@ export function useHandSubmission(
         };
       }
 
-      // If classic game is over, calculate bonuses and penalties
+      // If classic game is over, calculate time penalty and leftover bonus
       if (classicGameOver) {
-        const leftoverPenalty = calculateLeftoverPenalty(prev.deck);
-        const timeBonus = calculateTimeBonus(prev.timeElapsed);
-        const finalScore = newRawScore + timeBonus - leftoverPenalty;
+        const timePenalty = calculateTimePenalty(prev.timeElapsed);
+        const leftoverBonus = calculateLeftoverBonus(prev.deck);
+        const finalScore = newRawScore - timePenalty + leftoverBonus;
         
         return {
           ...prev,
           score: finalScore,
           rawScore: newRawScore,
-          timeBonus,
-          leftoverPenalty,
+          timePenalty,
+          leftoverBonus,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
           currentHand: modifiedResult,

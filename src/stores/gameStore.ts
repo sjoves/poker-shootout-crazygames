@@ -6,8 +6,8 @@ import {
   evaluateHand, 
   createDeck, 
   shuffleDeck, 
-  calculateTimeBonus, 
-  calculateLeftoverPenalty,
+  calculateTimePenalty, 
+  calculateLeftoverBonus,
   calculateStarRating,
   shouldTriggerBonusRound,
   getBetterHandMultiplier,
@@ -193,24 +193,24 @@ export const useGameStore = create<GameStore>()(
       const isClassic = state.mode === 'classic_fc' || state.mode === 'classic_cb';
       
       let finalScore = state.score;
-      let timeBonus = 0;
-      let leftoverPenalty = 0;
+      let timePenalty = 0;
+      let leftoverBonus = 0;
       
       if (isBlitz) {
         // Blitz: rawScore × handsPlayed
         finalScore = state.rawScore * state.handsPlayed;
       } else if (isClassic) {
-        leftoverPenalty = calculateLeftoverPenalty(state.deck);
-        timeBonus = calculateTimeBonus(state.timeElapsed);
-        finalScore = state.rawScore + timeBonus - leftoverPenalty;
+        timePenalty = calculateTimePenalty(state.timeElapsed);
+        leftoverBonus = calculateLeftoverBonus(state.deck);
+        finalScore = state.rawScore - timePenalty + leftoverBonus;
       }
       
       set({
         isGameOver: true,
         isPlaying: false,
         score: finalScore,
-        timeBonus,
-        leftoverPenalty,
+        timePenalty,
+        leftoverBonus,
       });
     },
     
@@ -298,15 +298,15 @@ export const useGameStore = create<GameStore>()(
 
       // Classic game over
       if (classicGameOver) {
-        const leftoverPenalty = calculateLeftoverPenalty(state.deck);
-        const timeBonus = calculateTimeBonus(state.timeElapsed);
-        const finalScore = newRawScore + timeBonus - leftoverPenalty;
+        const timePenalty = calculateTimePenalty(state.timeElapsed);
+        const leftoverBonus = calculateLeftoverBonus(state.deck);
+        const finalScore = newRawScore - timePenalty + leftoverBonus;
         
         set({
           score: finalScore,
           rawScore: newRawScore,
-          timeBonus,
-          leftoverPenalty,
+          timePenalty,
+          leftoverBonus,
           handsPlayed: newHandsPlayed,
           selectedCards: [],
           currentHand: modifiedResult,
