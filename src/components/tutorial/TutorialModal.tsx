@@ -629,6 +629,12 @@ function HandRankingsContent() {
 export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
 
+  // Reset to first step when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setCurrentStep(0);
+    }
+  }, [isOpen]);
   const steps: TutorialStep[] = [
     {
       id: 'rankings',
@@ -654,7 +660,7 @@ export function TutorialModal({ isOpen, onClose }: TutorialModalProps) {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      onClose();
+      setCurrentStep(0); // Cycle back to first step
     }
   };
 
