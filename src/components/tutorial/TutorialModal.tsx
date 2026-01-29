@@ -505,23 +505,47 @@ function HandRankingsContent() {
         </p>
       </div>
 
-      {/* Hand selector pills - horizontal carousel */}
-      <div className="overflow-x-auto scrollbar-hide -mx-2 px-2">
-        <div className="flex gap-1.5 min-w-max">
-          {handData.map((hand, index) => (
-            <button
-              key={hand.name}
-              onClick={() => setSelectedHand(index)}
-              className={`px-2.5 py-1 text-xs rounded-full transition-all whitespace-nowrap ${
-                selectedHand === index
-                  ? 'bg-primary text-primary-foreground shadow-md'
-                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
-              }`}
-            >
-              {hand.name}
-            </button>
-          ))}
+      {/* Hand selector pills with arrow navigation */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => setSelectedHand(prev => prev > 0 ? prev - 1 : handData.length - 1)}
+          className="p-1.5 rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          aria-label="Previous hand"
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        
+        <div className="overflow-hidden flex-1">
+          <div className="flex gap-1.5 justify-center">
+            {handData.slice(
+              Math.max(0, selectedHand - 2),
+              Math.min(handData.length, selectedHand + 3)
+            ).map((hand) => {
+              const actualIndex = handData.findIndex(h => h.name === hand.name);
+              return (
+                <button
+                  key={hand.name}
+                  onClick={() => setSelectedHand(actualIndex)}
+                  className={`px-2 py-1 text-xs rounded-full transition-all whitespace-nowrap ${
+                    selectedHand === actualIndex
+                      ? 'bg-primary text-primary-foreground shadow-md'
+                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  {hand.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
+        
+        <button
+          onClick={() => setSelectedHand(prev => prev < handData.length - 1 ? prev + 1 : 0)}
+          className="p-1.5 rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          aria-label="Next hand"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Selected hand display */}
@@ -531,24 +555,24 @@ function HandRankingsContent() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
-          className="bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl p-4 border border-border/50"
+          className="bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl p-3 border border-border/50"
         >
-          <div className="text-center mb-3">
-            <h4 className="text-xl font-display text-primary">
+          <div className="text-center mb-2">
+            <h4 className="text-lg font-display text-primary">
               {handData[selectedHand].name}
             </h4>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               {handData[selectedHand].desc}
             </p>
           </div>
 
-          {/* Example cards */}
-          <div className="flex justify-center gap-1 flex-wrap">
+          {/* Example cards - smaller size */}
+          <div className="flex justify-center gap-0.5">
             {EXAMPLE_HANDS[handData[selectedHand].name]?.map((card) => (
               <PlayingCard
                 key={card.id}
                 card={card}
-                size="sm"
+                size="xs"
                 animate={false}
                 isDisabled
               />
