@@ -484,6 +484,8 @@ function GameModesContent() {
 // Hand Rankings Content Component
 function HandRankingsContent() {
   const [selectedHand, setSelectedHand] = useState(0);
+  const [pillPage, setPillPage] = useState(0);
+  const PILLS_PER_PAGE = 3;
 
   const handData = [
     { name: 'Royal Flush', points: 5000, desc: '10, J, Q, K, A of the same suit' },
@@ -497,58 +499,68 @@ function HandRankingsContent() {
     { name: 'One Pair', points: 100, desc: 'Two cards of the same rank' },
   ];
 
+  const totalPages = Math.ceil(handData.length / PILLS_PER_PAGE);
+  const visibleHands = handData.slice(
+    pillPage * PILLS_PER_PAGE,
+    (pillPage + 1) * PILLS_PER_PAGE
+  );
+
+  const handlePrevPage = () => {
+    setPillPage(prev => (prev > 0 ? prev - 1 : totalPages - 1));
+  };
+
+  const handleNextPage = () => {
+    setPillPage(prev => (prev < totalPages - 1 ? prev + 1 : 0));
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-[340px] mx-auto">
+      {/* Goal section - fixed width */}
       <div className="text-center bg-muted/20 rounded-lg p-3">
         <p className="text-sm text-muted-foreground">
           <strong className="text-foreground">Goal:</strong> Build the strongest 5-card combination possible!
         </p>
       </div>
 
-      {/* Hand selector pills with arrow navigation */}
-      <div className="flex items-center gap-1">
+      {/* Hand selector pills with arrow navigation - fixed layout */}
+      <div className="flex items-center gap-2">
         <button
-          onClick={() => setSelectedHand(prev => prev > 0 ? prev - 1 : handData.length - 1)}
-          className="p-1.5 rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          aria-label="Previous hand"
+          onClick={handlePrevPage}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          aria-label="Previous hands"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
         
-        <div className="overflow-hidden flex-1">
-          <div className="flex gap-1.5 justify-center">
-            {handData.slice(
-              Math.max(0, selectedHand - 2),
-              Math.min(handData.length, selectedHand + 3)
-            ).map((hand) => {
-              const actualIndex = handData.findIndex(h => h.name === hand.name);
-              return (
-                <button
-                  key={hand.name}
-                  onClick={() => setSelectedHand(actualIndex)}
-                  className={`px-2 py-1 text-xs rounded-full transition-all whitespace-nowrap ${
-                    selectedHand === actualIndex
-                      ? 'bg-primary text-primary-foreground shadow-md'
-                      : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
-                  }`}
-                >
-                  {hand.name}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex-1 flex justify-center gap-1.5">
+          {visibleHands.map((hand) => {
+            const actualIndex = handData.findIndex(h => h.name === hand.name);
+            return (
+              <button
+                key={hand.name}
+                onClick={() => setSelectedHand(actualIndex)}
+                className={`px-2.5 py-1 text-xs rounded-full transition-all whitespace-nowrap min-w-[90px] ${
+                  selectedHand === actualIndex
+                    ? 'bg-primary text-primary-foreground shadow-md'
+                    : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
+                }`}
+              >
+                {hand.name}
+              </button>
+            );
+          })}
         </div>
         
         <button
-          onClick={() => setSelectedHand(prev => prev < handData.length - 1 ? prev + 1 : 0)}
-          className="p-1.5 rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
-          aria-label="Next hand"
+          onClick={handleNextPage}
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          aria-label="Next hands"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Selected hand display */}
+      {/* Selected hand display - fixed width */}
       <AnimatePresence mode="wait">
         <motion.div
           key={selectedHand}
@@ -566,7 +578,7 @@ function HandRankingsContent() {
             </p>
           </div>
 
-          {/* Example cards - smaller size */}
+          {/* Example cards */}
           <div className="flex justify-center gap-0.5">
             {EXAMPLE_HANDS[handData[selectedHand].name]?.map((card) => (
               <PlayingCard
