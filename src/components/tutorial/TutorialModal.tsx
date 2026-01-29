@@ -505,21 +505,23 @@ function HandRankingsContent() {
         </p>
       </div>
 
-      {/* Hand selector pills */}
-      <div className="flex flex-wrap gap-1.5 justify-center">
-        {handData.map((hand, index) => (
-          <button
-            key={hand.name}
-            onClick={() => setSelectedHand(index)}
-            className={`px-2.5 py-1 text-xs rounded-full transition-all ${
-              selectedHand === index
-                ? 'bg-primary text-primary-foreground shadow-md'
-                : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
-            }`}
-          >
-            {hand.name}
-          </button>
-        ))}
+      {/* Hand selector pills - horizontal carousel */}
+      <div className="overflow-x-auto scrollbar-hide -mx-2 px-2">
+        <div className="flex gap-1.5 min-w-max">
+          {handData.map((hand, index) => (
+            <button
+              key={hand.name}
+              onClick={() => setSelectedHand(index)}
+              className={`px-2.5 py-1 text-xs rounded-full transition-all whitespace-nowrap ${
+                selectedHand === index
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-muted/40 text-muted-foreground hover:bg-muted/60'
+              }`}
+            >
+              {hand.name}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Selected hand display */}
