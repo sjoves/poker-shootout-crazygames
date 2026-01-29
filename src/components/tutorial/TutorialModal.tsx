@@ -525,7 +525,8 @@ function HandRankingsContent() {
       {/* Hand selector pills with arrow navigation - fixed layout */}
       <div className="flex items-center justify-center gap-2">
         <button
-          onClick={handlePrevPage}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handlePrevPage(); }}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
           aria-label="Previous hands"
         >
@@ -537,8 +538,9 @@ function HandRankingsContent() {
             const actualIndex = handData.findIndex(h => h.name === hand.name);
             return (
               <button
+                type="button"
                 key={hand.name}
-                onClick={() => setSelectedHand(actualIndex)}
+                onClick={(e) => { e.stopPropagation(); setSelectedHand(actualIndex); }}
                 className={`px-2.5 py-1 text-xs rounded-full transition-all whitespace-nowrap min-w-[90px] ${
                   selectedHand === actualIndex
                     ? 'bg-primary text-primary-foreground shadow-md'
@@ -552,7 +554,8 @@ function HandRankingsContent() {
         </div>
         
         <button
-          onClick={handleNextPage}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleNextPage(); }}
           className="w-8 h-8 flex items-center justify-center rounded-full bg-muted/40 hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors shrink-0"
           aria-label="Next hands"
         >
