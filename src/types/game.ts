@@ -79,8 +79,8 @@ export interface GameState {
   showPowerUpSelection: boolean;
   // Classic mode scoring breakdown
   rawScore: number;
-  timeBonus: number;
-  leftoverPenalty: number;
+  timePenalty: number;
+  leftoverBonus: number;
   // Bonus round tracking
   bonusRoundCount: number;
   // Flag to trigger bonus round after level complete
